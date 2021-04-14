@@ -24,10 +24,8 @@ def parse_args():
                         help='Your lastfm user name')
     parser.add_argument('apikey', type=str, 
                         help='Your lastfm api key. Reffer to https://www.last.fm/api')
-    parser.add_argument('-p', '--path', type=str, 
-                        help='Set the relative path to save de csv file. If empty, will save to data folder paralel to the script folder')
     parser.add_argument('-d', '--delete_cache', action='store_true', 
-                        help='Will delete the cached requests at the end of execution (will make further executions slower)')
+                        help='Delete the cached requests at the end of execution (will make further executions slower)')
     return vars(parser.parse_args())
 
 def initiate_cache(filename, relative_path='../cache'):
@@ -156,9 +154,12 @@ if __name__ == "__main__":
         page = int(response['@attr']['page']) + 1
 
     #Save results on a csv file
-    path = '../data/lastfm_played_tracks.csv'
-    print('Saving csv results on ', path)
-    pd.DataFrame(data=responses, columns=['artist', 'song', 'unix_timestamp']).to_csv(path, index=False)
+    print('Saving csv results on data/lastfm_played_tracks.csv')
+    
+    if not pathlib.Path('../data').is_dir():
+        pathlib.Path('../data').mkdir()
+
+    pd.DataFrame(data=responses, columns=['artist', 'song', 'unix_timestamp']).to_csv('../data/lastfm_played_tracks.csv', index=False)
 
     if args['delete_cache'] is True:
         remove_cache(filename='get_recent_tracks_cache.sqlite')
