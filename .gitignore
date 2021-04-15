@@ -3,3 +3,5 @@
 *.vscode
 *.html
 *.log
+*.env
+__pycache__
