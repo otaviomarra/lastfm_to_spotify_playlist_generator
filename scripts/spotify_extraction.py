@@ -167,6 +167,8 @@ if __name__ == "__main__":
     splits = ceil(len(tracks)/100)
     chunks = np.array_split(tracks, splits)
 
+    #song_features = spotify.get_song_features(ids=tracks['sp_id'])
+
     for i in range(len(chunks)):
         # transform the IDs from each chunk into a csv list (string format) to be used at the api request
         song_ids = chunks[i]['sp_id'].to_string(
