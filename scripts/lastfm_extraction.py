@@ -7,7 +7,7 @@ from datetime import datetime
 import argparse
 import pandas as pd
 
-from utils.utils import *
+from utils.utils import initiate_cache, remove_cache, save_results
 
 
 def parse_args():
@@ -131,4 +131,4 @@ if __name__ == "__main__":
     if args['delete_cache'] is True:
         remove_cache(filename='get_recent_tracks_cache')
 
-    print('All good! Execution is over')
+    print('All good! Played tracks extracted from Lastfm user')

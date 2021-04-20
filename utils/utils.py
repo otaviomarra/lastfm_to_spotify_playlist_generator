@@ -1,3 +1,4 @@
+import sys
 import pathlib
 import pandas as pd
 import requests_cache
@@ -56,7 +57,7 @@ def save_results(filename, df, filepath='./data'):
 
         df (dataframe): dataframe to be saved as a csv file
 
-        columns: 
+        filepath (string): relative path where the results should be saved
 
         relative_path (string): relative path where the cached file will be created. 
             If the relative path stated does not exist, it will create the folder.
@@ -69,3 +70,28 @@ def save_results(filename, df, filepath='./data'):
 
     savepath = filepath + '/' + filename + '.csv'
     df.to_csv(savepath, index=False)
+
+
+def load_results(filename, filepath='./data'):
+    """
+    Saves the results for th api request. If the foler does not exist, creates it first
+    Mind that the file will be saved without the index
+
+    Arguments:
+        filename (string): name of the csvfile to be loaded
+
+        filepath (string): relative path where the csv file is stored
+
+
+        relative_path (string): relative path where the cached file will be created. 
+            If the relative path stated does not exist, it will create the folder.
+
+    Returns a dataframe of the loaded csv file
+    """
+
+    loadpath = filepath + '/' + filename + '.csv'
+    if pathlib.Path(filepath).isfile(loadpath):
+        return pd.read_csv(loadpath)
+    else:
+        print('ERROR! file ', filename, '.csv not found on path ', filepath)
+        sys.exit()
