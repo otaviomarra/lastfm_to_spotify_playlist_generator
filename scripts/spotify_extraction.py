@@ -143,26 +143,25 @@ if __name__ == "__main__":
     tracks = tracks[tracks['no_id'] == False]
 
     # Create and empty DF to store the results
-    cols = ['danceability',
-            'energy',
-            'key',
-            'loudness',
-            'mode',
-            'speechiness',
-            'acousticness',
-            'instrumentalness',
-            'liveness',
-            'valence',
-            'tempo',
-            'type',
-            'id',
-            'uri',
-            'track_href',
-            'analysis_url',
-            'duration_ms',
-            'time_signature', ]
-
-    song_features = pd.DataFrame(columns=cols)
+    song_features = pd.DataFrame(
+        columns=['danceability',
+                 'energy',
+                 'key',
+                 'loudness',
+                 'mode',
+                 'speechiness',
+                 'acousticness',
+                 'instrumentalness',
+                 'liveness',
+                 'valence',
+                 'tempo',
+                 'type',
+                 'id',
+                 'uri',
+                 'track_href',
+                 'analysis_url',
+                 'duration_ms',
+                 'time_signature', ])
 
     # we can make a single request with a csv of up to 100 song ids at once. So we break the dataframe into smaller lists to make multiple requests
     splits = ceil(len(tracks)/100)
