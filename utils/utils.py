@@ -4,7 +4,7 @@ import pandas as pd
 import requests_cache
 
 
-def initiate_cache(filename, relative_path='./cache'):
+def initiate_cache(filename: str, relative_path='./cache') -> None:
     """
     Initiates the sqlite cache for the api requests
 
@@ -23,7 +23,7 @@ def initiate_cache(filename, relative_path='./cache'):
     requests_cache.install_cache(file_path)
 
 
-def remove_cache(filename, relative_path='./cache'):
+def remove_cache(filename: str, relative_path='./cache') -> None:
     """
     Removes the cached sqlite from the api requests
 
@@ -47,7 +47,7 @@ def remove_cache(filename, relative_path='./cache'):
         pass
 
 
-def save_results(filename, df, filepath='./data'):
+def save_results(filename, df: pd.DataFrame, filepath='./data') -> None:
     """
     Saves the results for th api request. If the foler does not exist, creates it first
     Mind that the file will be saved without the index
@@ -72,7 +72,7 @@ def save_results(filename, df, filepath='./data'):
     df.to_csv(savepath, index=False)
 
 
-def load_results(filename, filepath='./data'):
+def load_results(filename, filepath='./data') -> pd.DataFrame:
     """
     Saves the results for th api request. If the foler does not exist, creates it first
     Mind that the file will be saved without the index
@@ -90,8 +90,8 @@ def load_results(filename, filepath='./data'):
     """
 
     loadpath = filepath + '/' + filename + '.csv'
-    if pathlib.Path(filepath).isfile(loadpath):
+    try:
         return pd.read_csv(loadpath)
-    else:
-        print('ERROR! file ', filename, '.csv not found on path ', filepath)
+    except Exception as e:
+        print(e)
         sys.exit()

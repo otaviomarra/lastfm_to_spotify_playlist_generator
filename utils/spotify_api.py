@@ -1,3 +1,4 @@
+import os
 import json
 from math import ceil
 import requests as re
@@ -6,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 
-class spotify_session(object):
+class spotify_requests(object):
     def __init__(self, client_id: str, client_secret: str) -> object:
         self.client_id = client_id
         self.client_secret = client_secret
@@ -66,6 +67,8 @@ class spotify_session(object):
         Returns
             The spotify song id for the song (or 'not_found' if we couldn't find it)
         """
+        os.system('clear')
+        print(f"Searching for song {song_name} by {band_name}")
         response = self.search_song(song_name, band_name)
         if response is not None:
             for i in range(len(response)):
@@ -78,7 +81,7 @@ class spotify_session(object):
         # if no returns, we could not find id, so it returns not_found
         return 'not_found'
 
-    def get_song_features(self, ids: pd.Series) -> pd.DataFrame:
+    def get_songs_features(self, ids: pd.Series) -> pd.DataFrame:
         """
         API request to get Spotify's song features from the Spotify track id
 
