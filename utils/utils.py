@@ -47,19 +47,17 @@ def remove_cache(filename: str, relative_path='./cache') -> None:
         pass
 
 
-def save_results(filename, df: pd.DataFrame, filepath='./data') -> None:
+def save_results(filename: str, df: pd.DataFrame, filepath='./data') -> None:
     """
-    Saves the results for th api request. If the foler does not exist, creates it first
+    Saves the results for th api request. If the folder does not exist, creates it first
     Mind that the file will be saved without the index
 
     Arguments:
-        filename (string): name of the csvfile to be saved
+        filename (string): name of the csv file to be saved (without the extension)
 
         df (dataframe): dataframe to be saved as a csv file
 
-        filepath (string): relative path where the results should be saved
-
-        relative_path (string): relative path where the cached file will be created. 
+        filepath (string): relative path where the results should be stored 
             If the relative path stated does not exist, it will create the folder.
 
     Returns None
@@ -72,21 +70,16 @@ def save_results(filename, df: pd.DataFrame, filepath='./data') -> None:
     df.to_csv(savepath, index=False)
 
 
-def load_results(filename, filepath='./data') -> pd.DataFrame:
+def load_results(filename: str, filepath='./data') -> pd.DataFrame:
     """
-    Saves the results for th api request. If the foler does not exist, creates it first
-    Mind that the file will be saved without the index
+    Load csv files.
 
     Arguments:
-        filename (string): name of the csvfile to be loaded
+        filename (string): name of the csv file to be loaded (without the extension)
 
-        filepath (string): relative path where the csv file is stored
+        filepath (string): relative path to the folder where the csv file is stored
 
-
-        relative_path (string): relative path where the cached file will be created. 
-            If the relative path stated does not exist, it will create the folder.
-
-    Returns a dataframe of the loaded csv file
+    Returns a Pandas dataframe of the loaded csv file
     """
 
     loadpath = filepath + '/' + filename + '.csv'
