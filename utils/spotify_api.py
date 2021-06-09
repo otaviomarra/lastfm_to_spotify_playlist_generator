@@ -1,13 +1,23 @@
 import os
+import sys
 import json
+import base64
+import time
 from math import ceil
-import requests as re
 
 import numpy as np
 import pandas as pd
+import requests as re
+from selenium import webdriver
 
 
 class spotify_requests(object):
+    """
+    Spotify requests makes only general api requests to collect public data.
+    It does not require user atuthentication
+      since it doesn't makes changes or access user personal data
+    """
+
     def __init__(self, client_id: str, client_secret: str) -> object:
         self.client_id = client_id
         self.client_secret = client_secret
@@ -127,3 +137,78 @@ class spotify_requests(object):
             song_features = song_features.append(temp)
 
         return song_features
+
+
+class spotify_user_api(object):
+    """
+    Spotify user api for actions that
+        requires user authentication (access and change on personal data)
+    """
+
+    def __init__(self, client_id: str, client_secret: str, redirect_uri='https://www.google.com', scope: str) -> object:
+        self.client_id = client_id
+        self.client_secret = client_secret
+        # run the browser authentication and return the authorization code only
+        authorization_code = authenticate_user(
+            redirect_uri=redirect_uri, scope=scope)
+        print("User authentication successful \n")
+        self.access_token = get_access_token(
+            authorization_code=authorization_code, redirect_uri=redirect_uri)
+        self.user_id = get_user_id()
+
+    def authenticate_user(self, redirect_uri: str, scope: str) -> str:
+        """
+        Open Firefox on Selenium to authenticate the Spotify user
+
+        For now, it is required for the user to have both Firefox installed and the geckodriver on PATH 
+            but in the future I'll think on a better solution for on Docker
+
+        Returns the authentication code to be used on the second step of the verification (after user add credentials)
+        """
+        params = {
+            'client_id': self.client_id,
+            'response_type': 'code',
+            'redirect_uri': redirect_uri,
+            'scope': scope
+        }
+        request_url = re.Request(
+            'GET', 'https://accounts.spotify.com/authorize', params=params).prepare().url
+
+        driver = webdriver.Firefox()  # yeah for now its firefox only
+        driver.get(request_url)
+
+        while not driver.current_url.startswith(self.redirect_uri):
+            continue
+
+        authorization_code = driver.current_url.split(
+            '?')[1].replace('code=', '')
+
+        return authorization_code
+
+    def get_access_token(self, authorization_code: str, redirect_uri: str) -> str:
+        # After user authentication, make a new request to refresh token
+        auth_pass = self.client_id + ':' + self.client_secret
+        b64_auth_pass = base64.b64encode(auth_pass.encode('utf-8')).decode()
+        r = re.post(
+            url='https://accounts.spotify.com/api/token',
+            headers={'Authorization': f'Basic {b64_auth_pass}'},
+            data={
+                'grant_type': 'authorization_code',
+                'code': authorization_code,
+                'redirect_uri': redirect_uri, })
+
+        if r.status_code == 200:
+            return r.json()['access_token']
+        else:
+            print(
+                f'!!!Error getting the access token after authentication!!! \n {r.json()}')
+            sys.exit()
+
+    def get_user_id(self) -> str:
+        r = re.get(url='https://api.spotify.com/v1/me',
+                   headers={'Authorization': f'Bearer {self.access_token}'})
+        if r.status_code == 200:
+            return r.json()['id']
+        else:
+            print(f'!!!Error retrieving the user id!!! \n {r.json()}')
+            sys.exit()
