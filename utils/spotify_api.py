@@ -141,13 +141,28 @@ class spotify_requests(object):
 
 class spotify_user_api(object):
     """
-    Spotify user api for actions that
-        requires user authentication (access and change on personal data)
+    Spotify user api for actions that requires user authentication (access and change on personal data)
+
+    Variables:
+        client_id: the app client id
+
+        client_secret: the app client secret
+
+        scope: scope to be granted access to on the authentication
+            It defined to what we will have access to
+            More than one scope can be used separated by simple space ("scope1 scope2 scope3")
+
+        access_token: the tokne generated after authentication, to be used on the API
+
+        user_id: spotify user id. it will be used to generate the api endpoints
+
+        post_headers: header with the access token, to be used on all post made on the api
     """
 
-    def __init__(self, client_id: str, client_secret: str, redirect_uri='https://www.google.com', scope: str) -> object:
+    def __init__(self, client_id: str, client_secret: str, redirect_uri: str, scope: str) -> object:
         self.client_id = client_id
         self.client_secret = client_secret
+        self.scope = scope
         # run the browser authentication and return the authorization code only
         authorization_code = authenticate_user(
             redirect_uri=redirect_uri, scope=scope)
@@ -155,21 +170,25 @@ class spotify_user_api(object):
         self.access_token = get_access_token(
             authorization_code=authorization_code, redirect_uri=redirect_uri)
         self.user_id = get_user_id()
+        self.post_headers = {
+            f'Content-Type":"application/json", "Authorization":"Bearer {self.access_token}'}
 
-    def authenticate_user(self, redirect_uri: str, scope: str) -> str:
+    def authenticate_user(self, redirect_uri: str) -> str:
         """
-        Open Firefox on Selenium to authenticate the Spotify user
-
+        Opens Firefox on Selenium to authenticate the Spotify user
         For now, it is required for the user to have both Firefox installed and the geckodriver on PATH 
             but in the future I'll think on a better solution for on Docker
+        Returns the authentication code to be used on the second step of the verification (refresh token)
 
-        Returns the authentication code to be used on the second step of the verification (after user add credentials)
+        Arguments:
+            redirect_uri (string): the redirect uri used on the authentication process
+                Mind that this should be exactly the same as used on the following token refresh and also to be registered on the web app
         """
         params = {
             'client_id': self.client_id,
             'response_type': 'code',
             'redirect_uri': redirect_uri,
-            'scope': scope
+            'scope': self.scope
         }
         request_url = re.Request(
             'GET', 'https://accounts.spotify.com/authorize', params=params).prepare().url
@@ -186,7 +205,16 @@ class spotify_user_api(object):
         return authorization_code
 
     def get_access_token(self, authorization_code: str, redirect_uri: str) -> str:
-        # After user authentication, make a new request to refresh token
+        """
+        The access token to be used on the api
+        After user authentication return an authorization code, we need to make a new request to refresh token
+
+        Arguments:
+            authorization_code (string): the authorization code generated on the user authentication
+
+            redirect_uri (string): the redirect uri used on the authentication process
+                Mind that this should be exactly the same as used on the authentication and also to be registered on the web app
+        """
         auth_pass = self.client_id + ':' + self.client_secret
         b64_auth_pass = base64.b64encode(auth_pass.encode('utf-8')).decode()
         r = re.post(
@@ -200,15 +228,54 @@ class spotify_user_api(object):
         if r.status_code == 200:
             return r.json()['access_token']
         else:
-            print(
-                f'!!!Error getting the access token after authentication!!! \n {r.json()}')
-            sys.exit()
+            raise Exception(
+                f'Error getting the access token after authentication \n {r.json()}')
 
     def get_user_id(self) -> str:
+        """
+        Get the user id to be used on the following post requests
+        """
         r = re.get(url='https://api.spotify.com/v1/me',
                    headers={'Authorization': f'Bearer {self.access_token}'})
         if r.status_code == 200:
             return r.json()['id']
         else:
-            print(f'!!!Error retrieving the user id!!! \n {r.json()}')
-            sys.exit()
+            raise Exception(
+                f'!!!Error retrieving the user id!!! \n {r.json()}')
+
+    def create_playlist(name: str, description: str, public=True, collaborative=False):
+        """
+        Create a playlist on Spotify
+
+        Arguments:
+            name (string):name of the playlist
+
+            description (string): playlist description. the function defaults to empty if no input
+
+            public (bool): if the playlist will be public or private
+                In order to set playlist to private, the playlist-modify-private scope should be granted.
+                If that's not the case, an error will be raised
+
+            collaborative (bool): if the playlist is collaborative or not. 
+                The spotify api defaults it to False.  
+                To create collaborative playlists you must have granted playlist-modify-private and playlist-modify-public scopes.
+                Collaborative playlists will always be private (public = False)
+        """
+
+        if 'playlist-modify-private' not in self.scope and public == False:
+            raise Exception('Wrong scope: cannot create private playlist')
+        elif collaborative == True and public == True:
+            raise Exception('Collaborative playlists cannot be public')
+        else:
+            pass
+
+        request_body = json.dumps({
+            "name": name,
+            "description": description,
+            "public": public,
+            "collaborative": collaborative
+        })
+
+        r = re.post(url=f'https://api.spotify.com/v1/users/{self.user_id}/playlists',
+                    data=request_body,
+                    headers=self.post_headers)

@@ -79,8 +79,7 @@ def get_lastfm_tracks(from_date, api_key, user, page=1):
     if response.status_code == 200:
         return response.json()['recenttracks']
     else:
-        print("ERROR! status_code = ", response.status_code)
-        sys.exit()
+        raise Exception(f'ERROR! status_code = , {response.status_code}')
 
 
 if __name__ == "__main__":
