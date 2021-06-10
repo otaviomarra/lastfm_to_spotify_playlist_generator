@@ -60,10 +60,13 @@ class spotify_requests(object):
         """
         r = re.get('https://api.spotify.com/v1/search?' + 'q=artist:' + band_name + '%20track:' +
                    song_name + '&market:from_token' + '&type=track&limit=50&include_external=audio', headers=self.headers)
-        try:
-            return r.json()['tracks']['items']
-        except:
-            return None
+        if r.status_code == 200:
+            try:
+                return r.json()['tracks']['items']
+            except:
+                return None
+        else:
+            raise Exception(f'Error: Bad api call. Please try again \n {r}')
 
     def find_song_id(self, song_name: str, band_name: str) -> str:
         """
@@ -82,8 +85,6 @@ class spotify_requests(object):
         response = self.search_song(song_name, band_name)
         if response is not None:
             for i in range(len(response)):
-                # there must be a better way of doing this but it'll work for now:
-                # we iterate through the entire artist list - there is a lot of useless data in the response
                 if response[i]['album']['artists'][0]['name'] == band_name:
                     return response[i]['id']
                 else:
@@ -183,6 +184,8 @@ class spotify_user_api(object):
         Arguments:
             redirect_uri (string): the redirect uri used on the authentication process
                 Mind that this should be exactly the same as used on the following token refresh and also to be registered on the web app
+
+        Returns the authorization_code (string)
         """
         params = {
             'client_id': self.client_id,
@@ -214,6 +217,8 @@ class spotify_user_api(object):
 
             redirect_uri (string): the redirect uri used on the authentication process
                 Mind that this should be exactly the same as used on the authentication and also to be registered on the web app
+
+        Returns the access_token (string)
         """
         auth_pass = self.client_id + ':' + self.client_secret
         b64_auth_pass = base64.b64encode(auth_pass.encode('utf-8')).decode()
@@ -234,6 +239,8 @@ class spotify_user_api(object):
     def get_user_id(self) -> str:
         """
         Get the user id to be used on the following post requests
+
+        Returns the user_id (string)
         """
         r = re.get(url='https://api.spotify.com/v1/me',
                    headers={'Authorization': f'Bearer {self.access_token}'})
@@ -260,6 +267,8 @@ class spotify_user_api(object):
                 The spotify api defaults it to False.  
                 To create collaborative playlists you must have granted playlist-modify-private and playlist-modify-public scopes.
                 Collaborative playlists will always be private (public = False)
+
+        Returns None
         """
 
         if 'playlist-modify-private' not in self.scope and public == False:
