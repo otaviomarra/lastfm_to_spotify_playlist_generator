@@ -36,8 +36,7 @@ def add_songs_to_playlist(songs, playlist):
     Returns None
     """
     url = f'https://api.spotify.com/v1/playlists/{playlist}/tracks'
-    data = json.dumps({'uris': songs})
-    response = re.post(url=url, data=data, headers=headers)
+    response = re.post(url=url, data=songs, headers=headers)
     print(response.json())
 
 
@@ -90,4 +89,5 @@ if __name__ == "__main__":
         # format and call the function to every chunk
         for i in range(len(chunks)):
             songs = chunks[i]['uris'].to_json(orient='records')
-            add_songs_to_playlist(songs=json.loads(songs), playlist=playlist)
+            songs = json.dumps({'uris': songs})
+            add_songs_to_playlist(songs=songs, playlist=playlist)

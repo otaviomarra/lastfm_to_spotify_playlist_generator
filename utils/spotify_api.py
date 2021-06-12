@@ -288,3 +288,31 @@ class spotify_user_api(object):
         r = re.post(url=f'https://api.spotify.com/v1/users/{self.user_id}/playlists',
                     data=request_body,
                     headers=self.post_headers)
+
+    def add_song_to_playlist(songs, playlist: str):
+        """
+        Makes the API request to add songs on an existing Spotify playlist
+
+        Arguments:
+            songs (string, list): all the songs uris in a csv string or list format 
+                Up to 100 at a time can be added to the playlist. If more than 100 songs uris are passed, an Exception will be raised
+                In case of a string input, the formatting should be as it follows:
+                    `songs='"spotify:track:id1","spotify:track:id2","spotify:track:id3"'`
+
+            playlist (string): the playlist id where the songs should be added
+
+        Returns None
+        """
+
+        if type(songs) == list:
+            songs = json.dumps({'uris': songs})
+        elif type(songs) == str:
+            songs = '{"uris" : [' + songs + ']}'
+        else:
+            raise Exception("Wrong ddataype input for songs")
+
+        # should receive a string with plain csvs or a list
+
+        response = re.post(url=f'https://api.spotify.com/v1/playlists/{playlist}/tracks',
+                           data=data,
+                           headers=self.post_headers)
