@@ -165,12 +165,12 @@ class spotify_user_api(object):
         self.client_secret = client_secret
         self.scope = scope
         # run the browser authentication and return the authorization code only
-        authorization_code = authenticate_user(
+        authorization_code = self.authenticate_user(
             redirect_uri=redirect_uri, scope=scope)
         print("User authentication successful \n")
-        self.access_token = get_access_token(
+        self.access_token = self.get_access_token(
             authorization_code=authorization_code, redirect_uri=redirect_uri)
-        self.user_id = get_user_id()
+        self.user_id = self.get_user_id()
         self.post_headers = {
             f'Content-Type":"application/json", "Authorization":"Bearer {self.access_token}'}
 
@@ -250,7 +250,7 @@ class spotify_user_api(object):
             raise Exception(
                 f'!!!Error retrieving the user id!!! \n {r.json()}')
 
-    def create_playlist(name: str, description: str, public=True, collaborative=False):
+    def create_playlist(self, name: str, description: str, public=True, collaborative=False) -> None:
         """
         Create a playlist on Spotify
 
@@ -289,30 +289,39 @@ class spotify_user_api(object):
                     data=request_body,
                     headers=self.post_headers)
 
-    def add_song_to_playlist(songs, playlist: str):
+    def add_song_to_playlist(self, songs: str or list, playlist: str) -> None:
         """
         Makes the API request to add songs on an existing Spotify playlist
 
         Arguments:
-            songs (string, list): all the songs uris in a csv string or list format 
+            songs (string, list): all the songs ids in a csv string or list format 
+                The song uri is composed as it follows: "spotify:track:[song_id]"
                 Up to 100 at a time can be added to the playlist. If more than 100 songs uris are passed, an Exception will be raised
                 In case of a string input, the formatting should be as it follows:
-                    `songs='"spotify:track:id1","spotify:track:id2","spotify:track:id3"'`
+                    for 3 songs with song ids "song_id_1", "song_id_2", "song_id_3",
+                    songs='spotify:track:[song_id_1],spotify:track:[song_id_2],spotify:track:[song_id_3]'
 
             playlist (string): the playlist id where the songs should be added
 
         Returns None
         """
 
-        if type(songs) == list:
-            songs = json.dumps({'uris': songs})
-        elif type(songs) == str:
-            songs = '{"uris" : [' + songs + ']}'
+        if type(songs) == str:
+            songs = songs.split(',')
+        elif type(songs) == list:
+            pass
         else:
-            raise Exception("Wrong ddataype input for songs")
+            raise Exception(
+                "Wrong dataype input for songs. Use either string or list")
 
+        assert len(
+            songs) <= 100, "No more than 100 song uris at a type can be passed"
+
+        songs = ["spotify:track:" + song_id for song_id in songs]
+
+        songs = json.dumps({'uris': songs})
         # should receive a string with plain csvs or a list
 
         response = re.post(url=f'https://api.spotify.com/v1/playlists/{playlist}/tracks',
-                           data=data,
+                           data=songs,
                            headers=self.post_headers)
