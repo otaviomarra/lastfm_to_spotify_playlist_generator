@@ -23,6 +23,9 @@ class spotify_requests(object):
         self.client_secret = client_secret
         self.headers = self.get_headers()
 
+    def __str__(self):
+        return f"Spotify App client id {self.client_id}"
+
     def get_headers(self):
         """
         Authenticate the spotify app to retrieve a client_secret and generate the headers
@@ -171,8 +174,10 @@ class spotify_user_api(object):
         self.access_token = self.get_access_token(
             authorization_code=authorization_code, redirect_uri=redirect_uri)
         self.user_id = self.get_user_id()
-        self.post_headers = {
-            f'Content-Type":"application/json", "Authorization":"Bearer {self.access_token}'}
+        self.post_headers = self.get_post_headers()
+
+    def __str__(self):
+        return f"Authenticated on user {self.user_id} with Scope {self.scope}. Spotify App client id {self.client_id}"
 
     def authenticate_user(self, redirect_uri: str) -> str:
         """
@@ -249,6 +254,9 @@ class spotify_user_api(object):
         else:
             raise Exception(
                 f'!!!Error retrieving the user id!!! \n {r.json()}')
+
+    def get_post_headers(self):
+        return {f'Content-Type":"application/json", "Authorization":"Bearer {self.access_token}'}
 
     def create_playlist(self, name: str, description: str, public=True, collaborative=False) -> None:
         """
