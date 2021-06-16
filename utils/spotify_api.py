@@ -11,6 +11,29 @@ import requests as re
 from selenium import webdriver
 
 
+def check_request_status(func):
+    def wrapper(*args, **kwargs):
+        r = func(*args, **kwargs)
+        if r.status_code == 200:
+            return r
+        else:
+            raise Exception(
+                f'Error: Bad api call. Please try again. Response: \n {r}')
+    return wrapper
+
+
+@check_request_status
+def get_request(url, headers):
+    r = re.get(url, headers=headers)
+    return r
+
+
+@check_request_status
+def post_request(url, data, headers):
+    r = re.post(url=url, data=data, headers=headers)
+    return r
+
+
 class spotify_requests(object):
     """
     Spotify requests makes only general api requests to collect public data.
@@ -35,7 +58,7 @@ class spotify_requests(object):
 
             client_secret (string): The spotify app client secret
 
-        Returns: 
+        Returns:
             The headers on a json format
         """
 
@@ -61,15 +84,12 @@ class spotify_requests(object):
         Returns:
             A json with the 50 first results for the band + song name search on spotify
         """
-        r = re.get('https://api.spotify.com/v1/search?' + 'q=artist:' + band_name + '%20track:' +
-                   song_name + '&market:from_token' + '&type=track&limit=50&include_external=audio', headers=self.headers)
-        if r.status_code == 200:
-            try:
-                return r.json()['tracks']['items']
-            except:
-                return None
-        else:
-            raise Exception(f'Error: Bad api call. Please try again \n {r}')
+        r = get_request(url='https://api.spotify.com/v1/search?' + 'q=artist:' + band_name + '%20track:' +
+                        song_name + '&market:from_token' + '&type=track&limit=50&include_external=audio', headers=self.headers)
+        try:
+            return r.json()['tracks']['items']
+        except:
+            return None
 
     def find_song_id(self, song_name: str, band_name: str) -> str:
         """
@@ -133,8 +153,8 @@ class spotify_requests(object):
             song_ids = chunks[i].to_string(
                 header=False, index=False).replace('\n ', ',').lstrip()
             # make the api request
-            r = re.get('https://api.spotify.com/v1/audio-features?ids=' +
-                       song_ids, headers=self.headers).json()
+            r = get_request(url='https://api.spotify.com/v1/audio-features?ids=' +
+                            song_ids, headers=self.headers).json()
 
             # normalize and append the results to a final dataframe
             temp = pd.json_normalize(r['audio_features'])
@@ -182,7 +202,7 @@ class spotify_user_api(object):
     def authenticate_user(self, redirect_uri: str) -> str:
         """
         Opens Firefox on Selenium to authenticate the Spotify user
-        For now, it is required for the user to have both Firefox installed and the geckodriver on PATH 
+        For now, it is required for the user to have both Firefox installed and the geckodriver on PATH
             but in the future I'll think on a better solution for on Docker
         Returns the authentication code to be used on the second step of the verification (refresh token)
 
@@ -227,7 +247,7 @@ class spotify_user_api(object):
         """
         auth_pass = self.client_id + ':' + self.client_secret
         b64_auth_pass = base64.b64encode(auth_pass.encode('utf-8')).decode()
-        r = re.post(
+        r = post_request(
             url='https://accounts.spotify.com/api/token',
             headers={'Authorization': f'Basic {b64_auth_pass}'},
             data={
@@ -235,11 +255,7 @@ class spotify_user_api(object):
                 'code': authorization_code,
                 'redirect_uri': redirect_uri, })
 
-        if r.status_code == 200:
-            return r.json()['access_token']
-        else:
-            raise Exception(
-                f'Error getting the access token after authentication \n {r.json()}')
+        return r.json()['access_token']
 
     def get_user_id(self) -> str:
         """
@@ -247,13 +263,10 @@ class spotify_user_api(object):
 
         Returns the user_id (string)
         """
-        r = re.get(url='https://api.spotify.com/v1/me',
-                   headers={'Authorization': f'Bearer {self.access_token}'})
-        if r.status_code == 200:
-            return r.json()['id']
-        else:
-            raise Exception(
-                f'!!!Error retrieving the user id!!! \n {r.json()}')
+        r = get_request(url='https://api.spotify.com/v1/me',
+                        headers={'Authorization': f'Bearer {self.access_token}'})
+
+        return r.json()['id']
 
     def get_post_headers(self):
         return {f'Content-Type":"application/json", "Authorization":"Bearer {self.access_token}'}
@@ -271,8 +284,8 @@ class spotify_user_api(object):
                 In order to set playlist to private, the playlist-modify-private scope should be granted.
                 If that's not the case, an error will be raised
 
-            collaborative (bool): if the playlist is collaborative or not. 
-                The spotify api defaults it to False.  
+            collaborative (bool): if the playlist is collaborative or not.
+                The spotify api defaults it to False.
                 To create collaborative playlists you must have granted playlist-modify-private and playlist-modify-public scopes.
                 Collaborative playlists will always be private (public = False)
 
@@ -293,16 +306,16 @@ class spotify_user_api(object):
             "collaborative": collaborative
         })
 
-        r = re.post(url=f'https://api.spotify.com/v1/users/{self.user_id}/playlists',
-                    data=request_body,
-                    headers=self.post_headers)
+        r = post_request(url=f'https://api.spotify.com/v1/users/{self.user_id}/playlists',
+                         data=request_body,
+                         headers=self.post_headers)
 
     def add_song_to_playlist(self, songs: str or list, playlist: str) -> None:
         """
         Makes the API request to add songs on an existing Spotify playlist
 
         Arguments:
-            songs (string, list): all the songs ids in a csv string or list format 
+            songs (string, list): all the songs ids in a csv string or list format
                 The song uri is composed as it follows: "spotify:track:[song_id]"
                 Up to 100 at a time can be added to the playlist. If more than 100 songs uris are passed, an Exception will be raised
                 In case of a string input, the formatting should be as it follows:
@@ -330,6 +343,6 @@ class spotify_user_api(object):
         songs = json.dumps({'uris': songs})
         # should receive a string with plain csvs or a list
 
-        response = re.post(url=f'https://api.spotify.com/v1/playlists/{playlist}/tracks',
-                           data=songs,
-                           headers=self.post_headers)
+        r = post_request(url=f'https://api.spotify.com/v1/playlists/{playlist}/tracks',
+                         data=songs,
+                         headers=self.post_headers)
