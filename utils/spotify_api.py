@@ -381,13 +381,13 @@ class spotify_user_api(object):
         Returns a list of all song uris (uri format: "spotiy:track:{song_id}")
         """
 
-        r = re.get(url=f'https://api.spotify.com/v1/playlists/{playlist}}/tracks?fields=total',
+        r = re.get(url=f'https://api.spotify.com/v1/playlists/{playlist}/tracks?fields=total',
                    headers=self.headers)
 
         total_songs = r.json()['total']
 
         # first request
-        r = get_request(url=f'https://api.spotify.com/v1/playlists/{playlist}}/tracks?fields=items(track(uri))',
+        r = get_request(url=f'https://api.spotify.com/v1/playlists/{playlist}/tracks?fields=items(track(uri))',
                             headers=self.headers)
 
         song_uris = [r.json()['items'][i]['track']['uri']
@@ -396,7 +396,7 @@ class spotify_user_api(object):
         # iterate through the following requests
         offset = 99  # maximum of 100 song ids per request, first item has offset = 0
         while offset < total_songs:
-            r = get_request(url=f'https://api.spotify.com/v1/playlists/{playlist}}/tracks?offset={offset}?fields=items(track(uri))',
+            r = get_request(url=f'https://api.spotify.com/v1/playlists/{playlist}/tracks?offset={offset}?fields=items(track(uri))',
                             headers=self.headers)
 
             temp_list = [r.json()['items'][i]['track']['uri']
