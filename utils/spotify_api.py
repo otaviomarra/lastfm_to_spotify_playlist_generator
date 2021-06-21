@@ -11,26 +11,50 @@ import requests as re
 from selenium import webdriver
 
 
-def check_request_status(func):
+def api_call(func):
+    """
+    This is just a wrapper for the api requests.
+        In case the request is good, it will return the api response
+
+        If we get an internal server error or exceed the api limits, it will wait for 5 seconds and retry (up to 8 times)
+
+        If we get another error, raises an exception and prints the response error
+
+        More info: https://developer.spotify.com/documentation/web-api/
+    """
     def wrapper(*args, **kwargs):
-        r = func(*args, **kwargs)
-        if r.status_code == 200:
-            return r
-        else:
-            raise Exception(
-                f'Error: Bad api call. Please try again. Response: \n {r}')
+        attempt = 1
+        while attempt <= 8:
+            r = func(*args, **kwargs)
+            if r.status_code in [200, 201, 202, 204]:
+                return r
+            elif r.status_code in [429, 500]:
+                time.sleep(5)
+                print(
+                    f'Attempt number {attempt} with status code {r.status_code}. Retrying...')
+                attempt += 1
+                continue
+            else:
+                raise Exception(
+                    f'Error: Bad api call. Please try again. \n Response: \n {r}')
     return wrapper
 
 
-@check_request_status
-def get_request(url, headers):
-    r = re.get(url, headers=headers)
+@api_call
+def get_request(*args, **kwargs):
+    """
+    Execute requests.get using the @api_call decorator
+    """
+    r = re.get(*args, **kwargs)
     return r
 
 
-@check_request_status
-def post_request(url, data, headers):
-    r = re.post(url=url, data=data, headers=headers)
+@api_call
+def post_request(*args, **kwargs):
+    """
+    Execute requests.post using the @api_call decorator
+    """
+    r = re.post(*args, **kwargs)
     return r
 
 
@@ -180,7 +204,7 @@ class spotify_user_api(object):
 
         user_id: spotify user id. it will be used to generate the api endpoints
 
-        post_headers: header with the access token, to be used on all post made on the api
+        headers: header with the access token, to be used on all requests made on the user api
     """
 
     def __init__(self, client_id: str, client_secret: str, redirect_uri: str, scope: str) -> object:
@@ -193,8 +217,8 @@ class spotify_user_api(object):
         print("User authentication successful \n")
         self.access_token = self.get_access_token(
             authorization_code=authorization_code, redirect_uri=redirect_uri)
+        self.headers = self.get_headers()
         self.user_id = self.get_user_id()
-        self.post_headers = self.get_post_headers()
 
     def __str__(self):
         return f"Authenticated on user {self.user_id} with Scope {self.scope}. Spotify App client id {self.client_id}"
@@ -257,19 +281,22 @@ class spotify_user_api(object):
 
         return r.json()['access_token']
 
+    def get_headers(self):
+        return {"Content-Type": "application/json", "Authorization": f"Bearer {self.access_token}"}
+
     def get_user_id(self) -> str:
         """
         Get the user id to be used on the following post requests
 
         Returns the user_id (string)
         """
+        # r = get_request(url='https://api.spotify.com/v1/me',
+        #                headers={'Authorization': f'Bearer {self.access_token}'})
+
         r = get_request(url='https://api.spotify.com/v1/me',
-                        headers={'Authorization': f'Bearer {self.access_token}'})
+                        headers=self.headers)
 
         return r.json()['id']
-
-    def get_post_headers(self):
-        return {f'Content-Type":"application/json", "Authorization":"Bearer {self.access_token}'}
 
     def create_playlist(self, name: str, description: str, public=True, collaborative=False) -> None:
         """
@@ -308,7 +335,7 @@ class spotify_user_api(object):
 
         r = post_request(url=f'https://api.spotify.com/v1/users/{self.user_id}/playlists',
                          data=request_body,
-                         headers=self.post_headers)
+                         headers=self.headers)
 
     def add_song_to_playlist(self, songs: str or list, playlist: str) -> None:
         """
@@ -316,11 +343,7 @@ class spotify_user_api(object):
 
         Arguments:
             songs (string, list): all the songs ids in a csv string or list format
-                The song uri is composed as it follows: "spotify:track:[song_id]"
                 Up to 100 at a time can be added to the playlist. If more than 100 songs uris are passed, an Exception will be raised
-                In case of a string input, the formatting should be as it follows:
-                    for 3 songs with song ids "song_id_1", "song_id_2", "song_id_3",
-                    songs='spotify:track:[song_id_1],spotify:track:[song_id_2],spotify:track:[song_id_3]'
 
             playlist (string): the playlist id where the songs should be added
 
@@ -336,7 +359,7 @@ class spotify_user_api(object):
                 "Wrong dataype input for songs. Use either string or list")
 
         assert len(
-            songs) <= 100, "No more than 100 song uris at a type can be passed"
+            songs) <= 100, "No more than 100 song uris at a time can be passed"
 
         songs = ["spotify:track:" + song_id for song_id in songs]
 
@@ -345,4 +368,40 @@ class spotify_user_api(object):
 
         r = post_request(url=f'https://api.spotify.com/v1/playlists/{playlist}/tracks',
                          data=songs,
-                         headers=self.post_headers)
+                         headers=self.headers)
+
+    def get_playlist_songs(self, playlist: str) -> list:
+        """
+        Get all song uris from a specified playlist.
+        Mind that different scopes might be needed, depending on the playlist to be either public or private
+
+        Arguments:
+            playlist (string): the playlist id where the songs should be added
+
+        Returns a list of all song uris (uri format: "spotiy:track:{song_id}")
+        """
+
+        r = re.get(url=f'https://api.spotify.com/v1/playlists/{playlist}}/tracks?fields=total',
+                   headers=self.headers)
+
+        total_songs = r.json()['total']
+
+        # first request
+        r = get_request(url=f'https://api.spotify.com/v1/playlists/{playlist}}/tracks?fields=items(track(uri))',
+                            headers=self.headers)
+
+        song_uris = [r.json()['items'][i]['track']['uri']
+                     for i in range(len(r.json()['items']))]
+
+        # iterate through the following requests
+        offset = 99  # maximum of 100 song ids per request, first item has offset = 0
+        while offset < total_songs:
+            r = get_request(url=f'https://api.spotify.com/v1/playlists/{playlist}}/tracks?offset={offset}?fields=items(track(uri))',
+                            headers=self.headers)
+
+            temp_list = [r.json()['items'][i]['track']['uri']
+                         for i in range(len(r.json()['items']))]
+            song_uris = song_uris + temp_list
+            offset += 99
+
+        return song_uris
