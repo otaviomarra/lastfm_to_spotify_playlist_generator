@@ -351,7 +351,8 @@ class spotify_user_api(object):
         Makes the API request to add songs on an existing Spotify playlist
 
         Arguments:
-            songs (string, list): all the songs ids in a csv string or list format
+            songs (string, list): all the songs to be added to the playlist in a csv string or list format
+                It can receive either song ids or song uris or both of them at the same time
                 Up to 100 at a time can be added to the playlist. If more than 100 songs uris are passed, an Exception will be raised
 
             playlist (string): the playlist id where the songs should be added
@@ -370,8 +371,8 @@ class spotify_user_api(object):
         assert len(
             songs) <= 100, "No more than 100 song uris at a time can be passed"
 
-        songs = ["spotify:track:" + song_id for song_id in songs]
-
+        songs = ["spotify:track:" + song_id
+                 if "spotify:track:" not in song_id else song_id for song_id in song_uris]
         songs = json.dumps({'uris': songs})
         # should receive a string with plain csvs or a list
 
@@ -420,7 +421,8 @@ class spotify_user_api(object):
         Makes the API request to add songs on an existing Spotify playlist
 
         Arguments:
-            tracks (string, list): all the songs ids in a csv string or list format
+            songs (string, list): all the songs to be deleted from the playlist in a csv string or list format
+                It can receive either song ids or song uris or both of them at the same time
                 Up to 100 at a time can be added to the playlist. If more than 100 songs uris are passed, an Exception will be raised
 
             playlist (string): the playlist id where the songs should be added
@@ -440,6 +442,8 @@ class spotify_user_api(object):
             raise Exception(
                 "Wrong dataype input for songs. Use either string or list")
 
+        songs = ["spotify:track:" + song_id
+                 if "spotify:track:" not in song_id else song_id for song_id in song_uris]
         songs = [{"uri": uri} for uri in songs]
         songs = json.dumps({"tracks": songs})
 
