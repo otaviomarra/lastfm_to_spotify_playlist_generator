@@ -394,7 +394,7 @@ class spotify_user_api(object):
                      for i in range(len(r.json()['items']))]
 
         # iterate through the following requests
-        offset = 99  # maximum of 100 song ids per request, first item has offset = 0
+        offset = 100  # maximum of 100 song ids per request
         while offset < total_songs:
             r = get_request(url=f'https://api.spotify.com/v1/playlists/{playlist}/tracks?offset={offset}?fields=items(track(uri))',
                             headers=self.headers)
@@ -402,6 +402,6 @@ class spotify_user_api(object):
             temp_list = [r.json()['items'][i]['track']['uri']
                          for i in range(len(r.json()['items']))]
             song_uris = song_uris + temp_list
-            offset += 99
+            offset += 100
 
         return song_uris
