@@ -58,6 +58,15 @@ def post_request(*args, **kwargs):
     return r
 
 
+@api_call
+def delete_request(*args, **kwargs):
+    """
+    Execute requests.delete using the @api_call decorator
+    """
+    r = re.delete(*args, **kwargs)
+    return r
+
+
 class spotify_requests(object):
     """
     Spotify requests makes only general api requests to collect public data.
@@ -405,3 +414,35 @@ class spotify_user_api(object):
             offset += 100
 
         return song_uris
+
+    def delete_playlist_songs(self, playlist: str, songs: list or str = None, delete_all: bool = False):
+        """
+        Makes the API request to add songs on an existing Spotify playlist
+
+        Arguments:
+            tracks (string, list): all the songs ids in a csv string or list format
+                Up to 100 at a time can be added to the playlist. If more than 100 songs uris are passed, an Exception will be raised
+
+            playlist (string): the playlist id where the songs should be added
+
+            delete_all (bool): if True, the code WILL IGNORE the list of song uris passed and will delete all songs from the playlist
+
+        Returns None
+        """
+
+        if delete_all == True:
+            songs = self.get_playlist_songs(playlist=playlist)
+        elif type(songs) == str & delete_all == False:
+            songs = songs.split(',')
+        elif type(songs) == list & delete_all == False:
+            pass
+        else:
+            raise Exception(
+                "Wrong dataype input for songs. Use either string or list")
+
+        songs = [{"uri": uri} for uri in songs]
+        songs = json.dumps({"tracks": songs})
+
+        delete_request(url=f'https://api.spotify.com/v1/playlists/{playlist}/tracks',
+                       data=songs,
+                       headers=self.headers)
