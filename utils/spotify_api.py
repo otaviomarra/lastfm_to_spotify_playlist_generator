@@ -69,9 +69,19 @@ def delete_request(*args, **kwargs):
 
 class spotify_requests(object):
     """
-    Spotify requests makes only general api requests to collect public data.
-    It does not require user atuthentication
-      since it doesn't makes changes or access user personal data
+    Description:
+        Spotify requests makes only general api requests to collect public data.
+        It does not require user atuthentication since it doesn't makes changes or access user personal data
+
+    Arguments:
+        client_id:
+            The app client id
+
+        client_secret:
+            The app client_secret
+
+        headers:
+            The api request headers
     """
 
     def __init__(self, client_id: str, client_secret: str) -> object:
@@ -84,15 +94,18 @@ class spotify_requests(object):
 
     def get_headers(self):
         """
-        Authenticate the spotify app to retrieve a client_secret and generate the headers
+        Description:
+            Authenticate the spotify app to retrieve a client_secret and generate the headers
 
         Arguments:
-            client_id (string): The spotify app client id
+            client_id(string): 
+                The spotify app client id
 
-            client_secret (string): The spotify app client secret
+            client_secret(string): 
+                The spotify app client secret
 
         Returns:
-            The headers on a json format
+            string with the headers on a json format
         """
 
         auth_response = re.post('https://accounts.spotify.com/api/token', {
@@ -107,15 +120,18 @@ class spotify_requests(object):
 
     def search_song(self, song_name: str, band_name: str) -> json:
         """
-        Makes the search song api request that returns the json response
+        Description:
+            Makes the search song api request that returns the json response
 
         Arguments:
-            song_name (string): Name of the song
+            song_name(string): 
+                Name of the song
 
-            band_name (string): Name of the band
+            band_name(string): 
+                Name of the band
 
         Returns:
-            A json with the 50 first results for the band + song name search on spotify
+            String with a json with the 50 first results for the band + song name search on spotify
         """
         r = get_request(url='https://api.spotify.com/v1/search?' + 'q=artist:' + band_name + '%20track:' +
                         song_name + '&market:from_token' + '&type=track&limit=50&include_external=audio', headers=self.headers)
@@ -126,15 +142,18 @@ class spotify_requests(object):
 
     def find_song_id(self, song_name: str, band_name: str) -> str:
         """
-        Makes the search song api request and iterate on the responde to get the spotify song id
+        Description:
+            Makes the search song api request and iterate on the responde to get the spotify song id
 
         Arguments:
-            song_name (string): Name of the song
+            song_name(string): 
+                Name of the song
 
-            band_name (string): Name of the band
+            band_name(string): 
+                Name of the band
 
-        Returns
-            The spotify song id for the song (or 'not_found' if we couldn't find it)
+        Returns:
+            string with the spotify song id for the song (or 'not_found' if not found)
         """
         os.system('clear')
         print(f"Searching for song {song_name} by {band_name}")
@@ -150,13 +169,15 @@ class spotify_requests(object):
 
     def get_songs_features(self, ids: pd.Series) -> pd.DataFrame:
         """
-        API request to get Spotify's song features from the Spotify track id
+        Description:
+            API request to get Spotify's song features from the Spotify track id
 
         Argument:
-            ids (series): A series of spotify_ids on csv format (the api request works with up to 100 ids at a time)
+            ids(pd.series): 
+                A pandas.series of spotify_ids on csv format
 
-        Returns
-            A json file with all the song features for the ids
+        Returns:
+            string with a json file with all the song features for the ids
         """
         song_features = pd.DataFrame(
             columns=['danceability',
@@ -198,22 +219,29 @@ class spotify_requests(object):
 
 class spotify_user_api(object):
     """
-    Spotify user api for actions that requires user authentication (access and change on personal data)
+    Description:
+        Spotify user api for actions that requires user authentication (access and change on personal data)
 
     Variables:
-        client_id: the app client id
+        client_id: 
+            The app client id
 
-        client_secret: the app client secret
+        client_secret: 
+            The app client secret
 
-        scope: scope to be granted access to on the authentication
+        scope: 
+            The scope to be granted access to on the authentication
             It defined to what we will have access to
             More than one scope can be used separated by simple space ("scope1 scope2 scope3")
 
-        access_token: the tokne generated after authentication, to be used on the API
+        access_token: 
+            The token generated after authentication, to be used on the API
 
-        user_id: spotify user id. it will be used to generate the api endpoints
+        user_id: 
+            The Spotify user id. it will be used to generate the api endpoints
 
-        headers: header with the access token, to be used on all requests made on the user api
+        headers: 
+            Header with the access token, to be used on all requests made on the user api
     """
 
     def __init__(self, client_id: str, client_secret: str, redirect_uri: str, scope: str) -> object:
@@ -234,16 +262,19 @@ class spotify_user_api(object):
 
     def authenticate_user(self, redirect_uri: str) -> str:
         """
-        Opens Firefox on Selenium to authenticate the Spotify user
-        For now, it is required for the user to have both Firefox installed and the geckodriver on PATH
-            but in the future I'll think on a better solution for on Docker
-        Returns the authentication code to be used on the second step of the verification (refresh token)
+        Description:
+            Opens Firefox on Selenium to authenticate the Spotify user
+            For now, it is required for the user to have both Firefox installed and the geckodriver on PATH
+                but in the future I'll think on a better solution for on Docker
+            Returns the authentication code to be used on the second step of the verification (refresh token)
 
         Arguments:
-            redirect_uri (string): the redirect uri used on the authentication process
-                Mind that this should be exactly the same as used on the following token refresh and also to be registered on the web app
+            redirect_uri(string): 
+                The redirect uri used on the authentication process
+                It should be exactly the same as used on the following token refresh and also to be registered on the web app
 
-        Returns the authorization_code (string)
+        Returns: 
+            string with the authorization_code
         """
         params = {
             'client_id': self.client_id,
@@ -267,16 +298,20 @@ class spotify_user_api(object):
 
     def get_access_token(self, authorization_code: str, redirect_uri: str) -> str:
         """
-        The access token to be used on the api
-        After user authentication return an authorization code, we need to make a new request to refresh token
+        Description:
+            The access token to be used on the api
+            After user authentication return an authorization code, we need to make a new request to refresh token
 
         Arguments:
-            authorization_code (string): the authorization code generated on the user authentication
+            authorization_code(string): 
+                The authorization code generated on the user authentication
 
-            redirect_uri (string): the redirect uri used on the authentication process
+            redirect_uri(string): 
+                The redirect uri used on the authentication process
                 Mind that this should be exactly the same as used on the authentication and also to be registered on the web app
 
-        Returns the access_token (string)
+        Returns: 
+            string with the access_token
         """
         auth_pass = self.client_id + ':' + self.client_secret
         b64_auth_pass = base64.b64encode(auth_pass.encode('utf-8')).decode()
@@ -295,9 +330,11 @@ class spotify_user_api(object):
 
     def get_user_id(self) -> str:
         """
-        Get the user id to be used on the following post requests
+        Description:
+            Get the user id to be used on the following post requests
 
-        Returns the user_id (string)
+        Returns: 
+            string with the user id
         """
         # r = get_request(url='https://api.spotify.com/v1/me',
         #                headers={'Authorization': f'Bearer {self.access_token}'})
@@ -309,23 +346,29 @@ class spotify_user_api(object):
 
     def create_playlist(self, name: str, description: str, public=True, collaborative=False) -> None:
         """
-        Create a playlist on Spotify
+        Description:
+            Create a playlist on Spotify
 
         Arguments:
-            name (string):name of the playlist
+            name(string):
+                Name of the playlist
 
-            description (string): playlist description. the function defaults to empty if no input
+            description(string): 
+                Playlist description. The function defaults to empty if no input
 
-            public (bool): if the playlist will be public or private
+            public(bool) = True: 
+                If the playlist will be public or private
                 In order to set playlist to private, the playlist-modify-private scope should be granted.
                 If that's not the case, an error will be raised
 
-            collaborative (bool): if the playlist is collaborative or not.
+            collaborative(bool) = False: 
+                If the playlist is collaborative or not.
                 The spotify api defaults it to False.
                 To create collaborative playlists you must have granted playlist-modify-private and playlist-modify-public scopes.
                 Collaborative playlists will always be private (public = False)
 
-        Returns None
+        Returns:   
+            None
         """
 
         if 'playlist-modify-private' not in self.scope and public == False:
@@ -348,16 +391,20 @@ class spotify_user_api(object):
 
     def add_song_to_playlist(self, songs: str or list, playlist: str) -> None:
         """
-        Makes the API request to add songs on an existing Spotify playlist
+        Description:
+            Makes the API request to add songs on an existing Spotify playlist
 
         Arguments:
-            songs (string, list): all the songs to be added to the playlist in a csv string or list format
+            songs (string, list): 
+                All the songs to be added to the playlist in a csv string or list format
                 It can receive either song ids or song uris or both of them at the same time
-                Up to 100 at a time can be added to the playlist. If more than 100 songs uris are passed, an Exception will be raised
+                Up to 100 at a time can be added to the playlist at once
 
-            playlist (string): the playlist id where the songs should be added
+            playlist (string): 
+                The playlist id where the songs should be added
 
-        Returns None
+        Returns: 
+            None
         """
 
         if type(songs) == str:
@@ -365,30 +412,35 @@ class spotify_user_api(object):
         elif type(songs) == list:
             pass
         else:
-            raise Exception(
+            raise TypeError(
                 "Wrong dataype input for songs. Use either string or list")
 
         assert len(
             songs) <= 100, "No more than 100 song uris at a time can be passed"
 
-        songs = ["spotify:track:" + song_id
-                 if "spotify:track:" not in song_id else song_id for song_id in song_uris]
-        songs = json.dumps({'uris': songs})
-        # should receive a string with plain csvs or a list
+        data = ["spotify:track:" + song_id
+                if "spotify:track:" not in song_id else song_id for song_id in songs]
+        data = json.dumps({'uris': data})
 
         r = post_request(url=f'https://api.spotify.com/v1/playlists/{playlist}/tracks',
-                         data=songs,
+                         data=data,
                          headers=self.headers)
 
-    def get_playlist_songs(self, playlist: str) -> list:
+    def get_playlist_songs(self, playlist: str, chunks: bool = False) -> list:
         """
-        Get all song uris from a specified playlist.
-        Mind that different scopes might be needed, depending on the playlist to be either public or private
+        Description:
+            Get all song uris from a specified playlist.
+            Mind that different scopes might be needed, depending on the playlist to be either public or private
 
         Arguments:
-            playlist (string): the playlist id where the songs should be added
+            playlist(string): 
+                The playlist id where the songs should be added
 
-        Returns a list of all song uris (uri format: "spotiy:track:{song_id}")
+            chunks(bool) = False: 
+                If True, it will return a list of lists, each element with no more than 100 song ids (following the api limits)
+
+        Returns: 
+            list of all song uris (uri format: "spotiy:track:{song_id}")
         """
 
         r = re.get(url=f'https://api.spotify.com/v1/playlists/{playlist}/tracks?fields=total',
@@ -400,8 +452,14 @@ class spotify_user_api(object):
         r = get_request(url=f'https://api.spotify.com/v1/playlists/{playlist}/tracks?fields=items(track(uri))',
                             headers=self.headers)
 
-        song_uris = [r.json()['items'][i]['track']['uri']
-                     for i in range(len(r.json()['items']))]
+        if chunks == True:
+            song_uris = []
+            temp_list = [r.json()['items'][i]['track']['uri']
+                         for i in range(len(r.json()['items']))]
+            song_uris.append(temp_list)
+        else:
+            song_uris = [r.json()['items'][i]['track']['uri']
+                         for i in range(len(r.json()['items']))]
 
         # iterate through the following requests
         offset = 100  # maximum of 100 song ids per request
@@ -411,42 +469,63 @@ class spotify_user_api(object):
 
             temp_list = [r.json()['items'][i]['track']['uri']
                          for i in range(len(r.json()['items']))]
-            song_uris = song_uris + temp_list
+
+            if chunks == True:
+                song_uris.append(temp_list)
+            else:
+                song_uris = song_uris + temp_list
+
             offset += 100
 
         return song_uris
 
     def delete_playlist_songs(self, playlist: str, songs: list or str = None, delete_all: bool = False):
         """
-        Makes the API request to add songs on an existing Spotify playlist
+        Description:
+            Makes the API request to add songs on an existing Spotify playlist
 
         Arguments:
-            songs (string, list): all the songs to be deleted from the playlist in a csv string or list format
+            playlist(string): 
+                The playlist id where the songs should be added
+
+            songs(string, list) = None: 
+                All the songs to be deleted from the playlist in a csv string or list format
                 It can receive either song ids or song uris or both of them at the same time
-                Up to 100 at a time can be added to the playlist. If more than 100 songs uris are passed, an Exception will be raised
+                Up to 100 songs at a time can be removed from the playlist at once (not applied to delete all songs)
+                    It will accept a list of lists (each element with no more than 100 songs)
 
-            playlist (string): the playlist id where the songs should be added
+            delete_all(bool) = False: 
+                If True, delete all songs from the playlist
 
-            delete_all (bool): if True, the code WILL IGNORE the list of song uris passed and will delete all songs from the playlist
+            Either songs or delete_all should be passed at once. If both stated, a ValueError will be raised
 
-        Returns None
+        Returns:
+            None
         """
-
-        if delete_all == True:
-            songs = self.get_playlist_songs(playlist=playlist)
+        if songs is not None & delete_all == True:
+            raise ValueError("songs cannot be passed when delete_all is True")
+        elif songs == None & delete_all == False:
+            raise ValueError(
+                "State songs argument or delete_all should be True")
+        elif songs == None & delete_all == True:
+            songs = self.get_playlist_songs(playlist=playlist, chunks=True)
         elif type(songs) == str & delete_all == False:
             songs = songs.split(',')
         elif type(songs) == list & delete_all == False:
             pass
         else:
-            raise Exception(
+            raise TypeError(
                 "Wrong dataype input for songs. Use either string or list")
 
-        songs = ["spotify:track:" + song_id
-                 if "spotify:track:" not in song_id else song_id for song_id in song_uris]
-        songs = [{"uri": uri} for uri in songs]
-        songs = json.dumps({"tracks": songs})
+        for i in range(len(songs)):
+            assert len(
+                songs) <= 100, "No more than 100 song uris at a time can be passed within a single list element"
 
-        delete_request(url=f'https://api.spotify.com/v1/playlists/{playlist}/tracks',
-                       data=songs,
-                       headers=self.headers)
+            data = ["spotify:track:" + song_id
+                    if "spotify:track:" not in song_id else song_id for song_id in songs[i]]
+            data = [{"uri": uri} for uri in data]
+            data = json.dumps({"tracks": data})
+
+            delete_request(url=f'https://api.spotify.com/v1/playlists/{playlist}/tracks',
+                           data=data,
+                           headers=self.headers)
