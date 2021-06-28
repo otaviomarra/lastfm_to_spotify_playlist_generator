@@ -368,7 +368,7 @@ class spotify_user_api(object):
                 Collaborative playlists will always be private (public = False)
 
         Returns:   
-            None
+            String with the newly created playlist id
         """
 
         if 'playlist-modify-private' not in self.scope and public == False:
@@ -388,6 +388,7 @@ class spotify_user_api(object):
         r = post_request(url=f'https://api.spotify.com/v1/users/{self.user_id}/playlists',
                          data=request_body,
                          headers=self.headers)
+        return r.json()['id']
 
     def add_song_to_playlist(self, songs: str or list, playlist: str) -> None:
         """
