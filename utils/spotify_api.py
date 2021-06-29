@@ -10,6 +10,8 @@ import pandas as pd
 import requests as re
 from selenium import webdriver
 
+from icecream import ic
+
 
 def api_call(func):
     """
@@ -35,8 +37,8 @@ def api_call(func):
                 attempt += 1
                 continue
             else:
-                raise Exception(
-                    f'Error: Bad api call. Please try again. \n Response: \n {r}')
+                ic(r.json())
+                raise Exception(f'Error: Bad api call, please try again: {r}')
     return wrapper
 
 
@@ -247,20 +249,20 @@ class spotify_user_api(object):
     def __init__(self, client_id: str, client_secret: str, redirect_uri: str, scope: str) -> object:
         self.client_id = client_id
         self.client_secret = client_secret
+        self.redirect_uri = redirect_uri
         self.scope = scope
         # run the browser authentication and return the authorization code only
-        authorization_code = self.authenticate_user(
-            redirect_uri=redirect_uri, scope=scope)
+        authorization_code = self.authenticate_user()
         print("User authentication successful \n")
         self.access_token = self.get_access_token(
-            authorization_code=authorization_code, redirect_uri=redirect_uri)
+            authorization_code=authorization_code)
         self.headers = self.get_headers()
         self.user_id = self.get_user_id()
 
     def __str__(self):
         return f"Authenticated on user {self.user_id} with Scope {self.scope}. Spotify App client id {self.client_id}"
 
-    def authenticate_user(self, redirect_uri: str) -> str:
+    def authenticate_user(self) -> str:
         """
         Description:
             Opens Firefox on Selenium to authenticate the Spotify user
@@ -279,7 +281,7 @@ class spotify_user_api(object):
         params = {
             'client_id': self.client_id,
             'response_type': 'code',
-            'redirect_uri': redirect_uri,
+            'redirect_uri': self.redirect_uri,
             'scope': self.scope
         }
         request_url = re.Request(
@@ -294,9 +296,11 @@ class spotify_user_api(object):
         authorization_code = driver.current_url.split(
             '?')[1].replace('code=', '')
 
+        driver.quit()
+
         return authorization_code
 
-    def get_access_token(self, authorization_code: str, redirect_uri: str) -> str:
+    def get_access_token(self, authorization_code: str) -> str:
         """
         Description:
             The access token to be used on the api
@@ -313,7 +317,7 @@ class spotify_user_api(object):
         Returns: 
             string with the access_token
         """
-        auth_pass = self.client_id + ':' + self.client_secret
+        auth_pass = f'{self.client_id}:{self.client_secret}'
         b64_auth_pass = base64.b64encode(auth_pass.encode('utf-8')).decode()
         r = post_request(
             url='https://accounts.spotify.com/api/token',
@@ -321,7 +325,7 @@ class spotify_user_api(object):
             data={
                 'grant_type': 'authorization_code',
                 'code': authorization_code,
-                'redirect_uri': redirect_uri, })
+                'redirect_uri': self.redirect_uri, })
 
         return r.json()['access_token']
 
