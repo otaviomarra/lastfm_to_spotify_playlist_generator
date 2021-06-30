@@ -10,8 +10,6 @@ import pandas as pd
 import requests as re
 from selenium import webdriver
 
-from icecream import ic
-
 
 def api_call(func):
     """
@@ -37,8 +35,8 @@ def api_call(func):
                 attempt += 1
                 continue
             else:
-                ic(r.json())
-                raise Exception(f'Error: Bad api call, please try again: {r}')
+                raise Exception(
+                    f'Error: Bad api call, please try again: {r.json()}')
     return wrapper
 
 
@@ -446,12 +444,16 @@ class spotify_user_api(object):
 
         Returns: 
             list of all song uris (uri format: "spotiy:track:{song_id}")
+            It will return an empty list if there are no songs on the playlist
         """
 
-        r = re.get(url=f'https://api.spotify.com/v1/playlists/{playlist}/tracks?fields=total',
-                   headers=self.headers)
+        r = get_request(url=f'https://api.spotify.com/v1/playlists/{playlist}/tracks?fields=total',
+                        headers=self.headers)
 
-        total_songs = r.json()['total']
+        try:
+            total_songs = r.json()['total']
+        except Exception:
+            return []  # The response does not total if the playlist if empty
 
         # first request
         r = get_request(url=f'https://api.spotify.com/v1/playlists/{playlist}/tracks?fields=items(track(uri))',
@@ -484,7 +486,7 @@ class spotify_user_api(object):
 
         return song_uris
 
-    def delete_playlist_songs(self, playlist: str, songs: list or str = None, delete_all: bool = False):
+    def delete_playlist_songs(self, playlist: str, songs: list or str or bool):
         """
         Description:
             Makes the API request to add songs on an existing Spotify playlist
@@ -493,34 +495,26 @@ class spotify_user_api(object):
             playlist(string): 
                 The playlist id where the songs should be added
 
-            songs(string, list) = None: 
+            songs(string, list, bool) = None: 
                 All the songs to be deleted from the playlist in a csv string or list format
+                If True is passed, all songs from the playlist will be deleted
                 It can receive either song ids or song uris or both of them at the same time
                 Up to 100 songs at a time can be removed from the playlist at once (not applied to delete all songs)
                     It will accept a list of lists (each element with no more than 100 songs)
 
-            delete_all(bool) = False: 
-                If True, delete all songs from the playlist
-
-            Either songs or delete_all should be passed at once. If both stated, a ValueError will be raised
-
         Returns:
             None
         """
-        if songs is not None & delete_all == True:
-            raise ValueError("songs cannot be passed when delete_all is True")
-        elif songs == None & delete_all == False:
-            raise ValueError(
-                "State songs argument or delete_all should be True")
-        elif songs == None & delete_all == True:
+
+        if songs == True:
             songs = self.get_playlist_songs(playlist=playlist, chunks=True)
-        elif type(songs) == str & delete_all == False:
+        elif type(songs) == str:
             songs = songs.split(',')
-        elif type(songs) == list & delete_all == False:
+        elif type(songs) == list:
             pass
         else:
             raise TypeError(
-                "Wrong dataype input for songs. Use either string or list")
+                f"Wrong dataype input for songs. Use either string or list. {type(songs)} was passed")
 
         for i in range(len(songs)):
             assert len(
