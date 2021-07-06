@@ -21,15 +21,15 @@ ENV CACHEPATH=/cache
 ENV DATAPATH=/data
 
 WORKDIR /usr/src/app
+COPY ${CACHEPATH} /cache/
+COPY ${DATAPATH} /data/
+COPY utils .
+COPY scripts .
+COPY selenium_open.py .
 
-COPY ${CACHEPATH} ${WORKDIR}
-COPY ${DATAPATH} ${WORKDIR}
-COPY /utils ${WORKDIR}
-COPY /scripts ${WORKDIR}
-
-RUN echo Installing dependencies
-RUN pip install --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt
+RUN echo "Installing python requirements"
+COPY requirements.txt .
+RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
 # Build Selenium Standalone
 FROM selenium/node-firefox:4.0.0-rc-1-prerelease-20210618
@@ -44,5 +44,4 @@ ENV SE_RELAX_CHECKS true
 EXPOSE 4444
 
 #Execute
-RUN ls -a
-ENTRYPOINT "./selenium_open.py"
+CMD ["python3", "selenium_open.py"]
