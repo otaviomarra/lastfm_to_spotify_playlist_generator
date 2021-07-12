@@ -1,12 +1,4 @@
-FROM python:3
-
-RUN apt-get update && apt-get install -yq \ 
-    firefox-esr \
-    unzip
-
-RUN wget -q "https://github.com/mozilla/geckodriver/releases/download/v0.19.1/geckodriver-v0.19.1-linux64.tar.gz" -O /tmp/geckodriver.tgz \
-    && tar zxf /tmp/geckodriver.tgz -C /usr/bin/ \
-    && rm /tmp/geckodriver.tgz
+FROM selenium/standalone-firefox
 
 ##Adding the api keys
 #ENV LASTFM_USERNAME="ommarra"
@@ -14,34 +6,15 @@ RUN wget -q "https://github.com/mozilla/geckodriver/releases/download/v0.19.1/ge
 #ENV SPOTIFY_APP_ID="6cb782c1b0404843b3e5a06e8361cb6e"
 #ENV SPOTIFY_SECRET="a32c28deab714fa89091395089cbca90"
 
-#Defining our stored cache and saved data relative path
-#   Cache will make the api requests to run faster
-#   Data will be usefull when updating playlists from already stored data, not running new api calls
-ENV CACHEPATH=/cache
-ENV DATAPATH=/data
+USER root
 
-WORKDIR /usr/src/app
-COPY ${CACHEPATH} /cache/
-COPY ${DATAPATH} /data/
-COPY utils .
-COPY scripts .
-COPY selenium_open.py .
+RUN apt-get update && apt-get install -y python3-pip
 
-RUN echo "Installing python requirements"
-COPY requirements.txt .
-RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
+WORKDIR /app/
 
-# Build Selenium Standalone
-FROM selenium/node-firefox:4.0.0-rc-1-prerelease-20210618
-LABEL authors=SeleniumHQ
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+RUN rm requirements.txt
+COPY selenium_open.py /scripts/
 
-COPY selenium/start-selenium-standalone.sh /opt/bin/start-selenium-standalone.sh
-COPY selenium/selenium.conf /etc/supervisor/conf.d/
-COPY selenium/generate_config /opt/bin/generate_config
-
-ENV SE_RELAX_CHECKS true
-
-EXPOSE 4444
-
-#Execute
-CMD ["python3", "selenium_open.py"]
+CMD ["python3", "scripts/selenium_open.py"]

@@ -18,10 +18,15 @@ awesome-project "Do something!"  # prints "Nah."
 
 Here you should say what actually happens when you execute the code above.
 
+**Building the image**
+`sudo docker pull selenium/standalone-firefox`
+`sudo docker build --rm -t spotifm:main`
+
 ### Initial Configuration
 
 Some projects require initial configuration (e.g. access tokens or keys, `npm i`).
 This is the section where you would document those requirements.
+
 
 ## Developing
 
