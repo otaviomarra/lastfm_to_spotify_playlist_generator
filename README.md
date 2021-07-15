@@ -1,3 +1,9 @@
+**Running everything**
+`sudo docker build --rm -t spotifm`
+`sudo docker run -p 4444:4444 -it spotifm`
+
+
+
 ![Logo of the project](https://raw.githubusercontent.com/jehna/readme-best-practices/master/sample-logo.png)
 
 # Spotify playlist generator from Lastfm
@@ -18,9 +24,6 @@ awesome-project "Do something!"  # prints "Nah."
 
 Here you should say what actually happens when you execute the code above.
 
-**Building the image**
-`sudo docker pull selenium/standalone-firefox`
-`sudo docker build --rm -t spotifm:main`
 
 ### Initial Configuration
 

@@ -1,20 +1,36 @@
-FROM selenium/standalone-firefox
+FROM python:3
 
-##Adding the api keys
-#ENV LASTFM_USERNAME="ommarra"
-#ENV LASTFM_APIKEY="cf786f78db52a45f40f6e7b573b7d211"
-#ENV SPOTIFY_APP_ID="6cb782c1b0404843b3e5a06e8361cb6e"
-#ENV SPOTIFY_SECRET="a32c28deab714fa89091395089cbca90"
+RUN apt-get update && apt-get install -y \
+    python3 python3-pip \
+    curl unzip wget \
+    xvfb
 
-USER root
+# Installing Geckodriver and Firefox
+RUN GECKODRIVER_VERSION=`curl https://github.com/mozilla/geckodriver/releases/latest | grep -Po 'v[0-9]+.[0-9]+.[0-9]+'` && \
+    wget https://github.com/mozilla/geckodriver/releases/download/$GECKODRIVER_VERSION/geckodriver-$GECKODRIVER_VERSION-linux64.tar.gz && \
+    tar -zxf geckodriver-$GECKODRIVER_VERSION-linux64.tar.gz -C /usr/local/bin && \
+    chmod +x /usr/local/bin/geckodriver && \
+    rm geckodriver-$GECKODRIVER_VERSION-linux64.tar.gz
 
-RUN apt-get update && apt-get install -y python3-pip
+RUN FIREFOX_SETUP=firefox-setup.tar.bz2 && \
+    apt-get purge firefox && \
+    wget -O $FIREFOX_SETUP "https://download.mozilla.org/?product=firefox-latest&os=linux64" && \
+    tar xjf $FIREFOX_SETUP -C /opt/ && \
+    ln -s /opt/firefox/firefox /usr/bin/firefox && \
+    rm $FIREFOX_SETUP
 
-WORKDIR /app/
+#COPY requirements.txt .
+#RUN pip install --no-cache-dir -r requirements.txt
+#RUN rm requirements.txt
 
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
-RUN rm requirements.txt
-COPY selenium_open.py /scripts/
+#ENV LANG C.UTF-8
+#ENV LC_ALL C.UTF-8
+#ENV PYTHONUNBUFFERED=1
 
-CMD ["python3", "scripts/selenium_open.py"]
+WORKDIR /usr/src/app
+
+COPY . .
+RUN pip install --no-cache-dir -r requirements.txt && \
+    rm requirements.txt
+
+CMD ["python", "selenium_open.py"]

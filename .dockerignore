@@ -1,0 +1,10 @@
+#*.sqlite
+#*.csv
+*.vscode
+*.html
+*.log
+*.env
+*.ipynb_checkpoints
+__pycache__
+#
+README.md
