@@ -6,6 +6,7 @@ from datetime import datetime
 
 import argparse
 import pandas as pd
+from dotenv import load_dotenv
 
 from utils.utils import initiate_cache, remove_cache, save_results
 
@@ -20,10 +21,6 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('start', type=str,
                         help='Start date on YYYYMMDD format')
-    parser.add_argument('user', type=str,
-                        help='Your lastfm user name')
-    parser.add_argument('apikey', type=str,
-                        help='Your lastfm api key. Reffer to https://www.last.fm/api')
     parser.add_argument('-d', '--delete_cache', action='store_true',
                         help='Delete the cached requests at the end of execution (will make further executions slower)')
     return vars(parser.parse_args())
@@ -83,6 +80,12 @@ def get_lastfm_tracks(from_date, api_key, user, page=1):
 
 
 if __name__ == "__main__":
+
+    # Get all env variables
+    load_dotenv()
+    user = os.environ.get("LASTFM_USER")
+    apikey = os.environ.get("LASTFM_API_KEY")
+
     args = parse_args()
 
     initiate_cache(filename='get_recent_tracks_cache')

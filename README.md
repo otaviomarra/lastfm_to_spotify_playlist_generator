@@ -1,35 +1,29 @@
-**Running everything**
-`sudo docker build --rm -t spotifm`
-`sudo docker run -p 4444:4444 -it spotifm`
-
-
-
-![Logo of the project](https://raw.githubusercontent.com/jehna/readme-best-practices/master/sample-logo.png)
-
 # Spotify playlist generator from Lastfm
-> Additional information or tagline
 
-Generate spotify playlists based on your lastfm records! Easily download your lastfm played tracks, clusterize and generate new playlists on Spotify on demand
+Generate spotify playlists based on your lastfm records! Download your lastfm played tracks, clusterize and generate new playlists on Spotify on demand
 
 ## Installing / Getting started
 
-A quick introduction of the minimal setup you need to get a hello world up &
-running.
+Make sure all libraries from [requirements.txt](https:\\link) are installed
 
-```shell
-packagemanager install awesome-project
-awesome-project start
-awesome-project "Do something!"  # prints "Nah."
-```
-
-Here you should say what actually happens when you execute the code above.
-
+The project was written using Selenium with Firefox to open a browser window for the user to authentication. Make sure you have both Firefox and the [Geckodriver](https://github.com/mozilla/geckodriver) plugin installed (you can also change to another browser on the [utils/spotify_api.py](https://link) file at line 288)
 
 ### Initial Configuration
 
-Some projects require initial configuration (e.g. access tokens or keys, `npm i`).
-This is the section where you would document those requirements.
+You will need to have acces to both lastfm and spotify apis (check links below to get you api tokens)
 
+**Lastfm API** : [Last.fm API account](https://www.last.fm/api)<br>
+**Spotify** : [Spotify for developers](https://developer.spotify.com/) - log in with you Spotify account and create a new app
+
+After that, create a `.env` file on root, following the example below:
+
+```
+LASTFM_USER = "username"
+LASTFM_API_KEY = "apikey"
+SPOTIFY_CLIENT_ID = "clientid"
+SPOTIFY_CLIENT_SECRET = "clientsecret"
+```
+No need to worry with the Spotify's user authentication - it will be made via browser when needed
 
 ## Developing
 
@@ -44,30 +38,8 @@ packagemanager install
 
 And state what happens step-by-step.
 
-### Building
-
-If your project needs some additional steps for the developer to build the
-project after some code changes, state them here:
-
-```shell
-./configure
-make
-make install
-```
-
-Here again you should state what actually happens when the code above gets
-executed.
-
-### Deploying / Publishing
-
-In case there's some step you have to take that publishes this project to a
-server, this is the right time to state it.
-
-```shell
-packagemanager deploy awesome-project -s server.com -u username -p password
-```
-
-And again you'd need to tell what the previous code actually does.
+### Docker version (wip)
+**IMPORTANT:** Further development to allow te browser GUI to be opened (probably with a vnc) is still missing. Therefore, the current Dockerfile is still not working
 
 ## Features
 

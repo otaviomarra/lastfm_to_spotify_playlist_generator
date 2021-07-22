@@ -4,7 +4,7 @@ from math import ceil
 import argparse
 import numpy as np
 import pandas as pd
-import requests as re
+from dotenv import load_dotenv
 
 from utils.utils import save_results, load_results
 from utils.spotify_api import spotify_user_api
@@ -30,6 +30,11 @@ def parse_args():
 
 
 if __name__ == "__main__":
+
+    # Get all env variables
+    load_dotenv()
+    spotify_client_secret = os.environ.get("SPOTIFY_CLIENT_SECRET")
+    spotify_client_id = os.environ.get("SPOTIFY_CLIENT_ID")
 
     args = parse_args()
 
