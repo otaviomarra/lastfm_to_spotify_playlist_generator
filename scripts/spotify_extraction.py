@@ -16,10 +16,6 @@ def parse_args():
     """
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('spotify_client_id', type=str,
-                        help='The spotify app client id')
-    parser.add_argument('spotify_client_secret', type=str,
-                        help='The spotify app client secret')
     parser.add_argument('-d', '--delete_cache', action='store_true',
                         help='Delete the cached requests at the end of execution (will make further executions slower)')
     return vars(parser.parse_args())

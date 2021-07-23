@@ -27,26 +27,57 @@ No need to worry with the Spotify's user authentication - it will be made via br
 
 ## Developing
 
-Here's a brief intro about what a developer must do in order to start developing
-the project further:
-
-```shell
-git clone https://github.com/your/awesome-project.git
-cd awesome-project/
-packagemanager install
-```
-
-And state what happens step-by-step.
-
 ### Docker version (wip)
 **IMPORTANT:** Further development to allow te browser GUI to be opened (probably with a vnc) is still missing. Therefore, the current Dockerfile is still not working
 
 ## Features
 
-What's all the bells and whistles this project can perform?
-* What's the main functionality
-* You can also do another thing
-* If you get really randy, you can even do this
+The project consists of four scripts, each one that can perform a specific step on generating the playlists
+
+### `lastfm_extraction.py`
+Access the user's lastfm data and retrieve all scrobles from the starting date up until the current date.
+
+|Argument|Required|Description|
+|---|---|---|
+|start|YES|The initial date from when all scrobles will be collected on a YYYYMMDD format|
+|delete-cache (-d)|NO|If declared, all cached api requests will be deleted at the end of the execution|
+
+Utilization example: 
+```
+$ python3 lastfm_extraction.py 20200101 -d
+```
+
+**Output:** <br>
+`data/lastfm_played_tracks.csv` sample:
+```
+artist,song,unix_timestamp
+The Beatles,Here Comes The Sun,1618922976
+Cyndyi Lauper,Girls Just Want To Have Fun,1618853797
+```
+
+### `spotify_extraction.py`
+Collect all spotify data from the previously scrobled songs, searching for both Artist and Song name. It returns both the song spotify_id and the song features. If the song id was not found, it will return `not_found` instead of the song id hash
+
+|Argument|Required|Description|
+|---|---|---|
+|delete-cache (-d)|NO|If declared, all cached api requests will be deleted at the end of the execution|
+
+**Output:** <br>
+`data/spotify_tracks_ids.csv` sample:
+```
+artist,song,sp_id,no_id
+The Stooges,Tight Pants - Remastered Studio,2K9JdrobtGd4hQcxqiINXS,False
+Neurosis,Fire is the End Lesson,29xUjsv0hjPjnBSw4fUqyi,False
+Om,At Giza,not_found,True
+Mac DeMarco,Still Together,2RLm6OrnjLuoyQEowCJ6QE,False
+```
+`data/spotify_songs_features.csv` sample:
+```
+danceability,energy,key,loudness,mode,speechiness,acousticness,instrumentalness,liveness,valence,tempo,type,id,uri,track_href,analysis_url,duration_ms,time_signature
+0.21,0.744,1,-9.898,1,0.0386,0.000174,0.294,0.329,0.0631,130.866,audio_features,29xUjsv0hjPjnBSw4fUqyi,spotify:track:29xUjsv0hjPjnBSw4fUqyi,https://api.spotify.com/v1/tracks/29xUjsv0hjPjnBSw4fUqyi,https://api.spotify.com/v1/audio-analysis/29xUjsv0hjPjnBSw4fUqyi,414413,4
+0.274,0.606,4,-6.493,1,0.03,0.00962,0.0264,0.115,0.685,77.336,audio_features,5HR0UqvkEL1KhvaRtQVXFr,spotify:track:5HR0UqvkEL1KhvaRtQVXFr,https://api.spotify.com/v1/tracks/5HR0UqvkEL1KhvaRtQVXFr,https://api.spotify.com/v1/audio-analysis/5HR0UqvkEL1KhvaRtQVXFr,256960,4
+0.198,0.756,1,-7.04,1,0.0518,0.00229,0.715,0.16,0.246,121.924,audio_features,4SNVaP303lu2bU5GnT3nMm
+```
 
 ## Configuration
 
