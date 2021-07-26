@@ -8,7 +8,7 @@ import argparse
 import pandas as pd
 from dotenv import load_dotenv
 
-from utils.utils import initiate_cache, remove_cache, save_results
+from utils.utils import save_results, load_user_results
 
 
 def parse_args():
@@ -19,10 +19,10 @@ def parse_args():
     """
 
     parser = argparse.ArgumentParser()
+    parser.add_argument('user', type=str,
+                        help='username for personal data')
     parser.add_argument('start', type=str,
                         help='Start date on YYYYMMDD format')
-    parser.add_argument('-d', '--delete_cache', action='store_true',
-                        help='Delete the cached requests at the end of execution (will make further executions slower)')
     return vars(parser.parse_args())
 
 
@@ -88,10 +88,18 @@ if __name__ == "__main__":
 
     args = parse_args()
 
-    initiate_cache(filename='get_recent_tracks_cache')
+    stored_data = load_user_results(
+        filename='lastfm_played_tracks', user=args['user'])
 
-    from_date = datetime.strptime(args['start'], '%Y%m%d').date()
-    from_date = int(time.mktime(from_date.timetuple()))
+    if stored_data == False:
+        # No stored data. Make requests from the stated start date
+        from_date = int(time.mktime(
+            datetime.strptime(args['start'], '%Y%m%d').date().timetuple()))
+    else:
+        # There is stored data. Only make requests from the maximum date onwards
+        # If the stated start date is bigger than the maximum stored date, it will completely overwrite the file
+        from_date = max(stored_data['unix_timestamp'].max(),
+                        int(time.mktime(datetime.strptime(args['start'], '%Y%m%d').date().timetuple())))
 
     responses = []
 

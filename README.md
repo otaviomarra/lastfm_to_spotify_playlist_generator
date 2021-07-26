@@ -1,3 +1,5 @@
+for utils: EXPORT PYTHONPATH=$PYTHONPATH:$(pwd)
+
 # Spotify playlist generator from Lastfm
 
 Generate spotify playlists based on your lastfm records! Download your lastfm played tracks, clusterize and generate new playlists on Spotify on demand
@@ -40,11 +42,10 @@ Access the user's lastfm data and retrieve all scrobles from the starting date u
 |Argument|Required|Description|
 |---|---|---|
 |start|YES|The initial date from when all scrobles will be collected on a YYYYMMDD format|
-|delete-cache (-d)|NO|If declared, all cached api requests will be deleted at the end of the execution|
 
 Utilization example: 
 ```
-$ python3 lastfm_extraction.py 20200101 -d
+$ python3 lastfm_extraction.py 20200101
 ```
 
 **Output:** <br>
@@ -57,10 +58,6 @@ Cyndyi Lauper,Girls Just Want To Have Fun,1618853797
 
 ### `spotify_extraction.py`
 Collect all spotify data from the previously scrobled songs, searching for both Artist and Song name. It returns both the song spotify_id and the song features. If the song id was not found, it will return `not_found` instead of the song id hash
-
-|Argument|Required|Description|
-|---|---|---|
-|delete-cache (-d)|NO|If declared, all cached api requests will be deleted at the end of the execution|
 
 **Output:** <br>
 `data/spotify_tracks_ids.csv` sample:
