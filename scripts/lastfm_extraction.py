@@ -84,7 +84,7 @@ if __name__ == "__main__":
     # Get all env variables
     load_dotenv()
     user = os.environ.get("LASTFM_USER")
-    apikey = os.environ.get("LASTFM_API_KEY")
+    api_key = os.environ.get("LASTFM_API_KEY")
 
     args = parse_args()
 
@@ -96,12 +96,13 @@ if __name__ == "__main__":
     responses = []
 
     response = get_lastfm_tracks(
-        from_date=from_date, api_key=args['apikey'], user=args['user'])
+        from_date=from_date, api_key=api_key, user=user)
 
     append_results(response['track'])
 
     # If not cached, sleep to keep the api requests per second low
     if not getattr(response, 'from_cache', False):
+        print('no cache')
         time.sleep(0.2)
 
     total_pages = int(response['@attr']['totalPages'])
@@ -113,7 +114,7 @@ if __name__ == "__main__":
         print("requesting page", page, "from", total_pages, "pages")
 
         response = get_lastfm_tracks(
-            from_date=from_date, api_key=args['apikey'], user=args['user'], page=page)
+            from_date=from_date, api_key=api_key, user=user, page=page)
 
         append_results(response['track'])
 
