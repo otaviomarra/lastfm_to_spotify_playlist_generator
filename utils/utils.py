@@ -70,7 +70,7 @@ def save_results(filename: str, df: pd.DataFrame, filepath='./data') -> None:
     df.to_csv(savepath, index=False)
 
 
-def load_results(filename: str, filepath='./data': str) -> pd.DataFrame:
+def load_results(filename: str, filepath: str = './data') -> pd.DataFrame:
     """
     Load csv files.
 
@@ -91,7 +91,7 @@ def load_results(filename: str, filepath='./data': str) -> pd.DataFrame:
         sys.exit()
 
 
-def load_user_results(filename: str, user: str, filepath='./data': str) -> pd.DataFrame, bool:
+def load_user_results(filename: str, user: str, filepath: str = './data') -> pd.DataFrame:
     """
     Load personal user information.
 
@@ -103,14 +103,14 @@ def load_user_results(filename: str, user: str, filepath='./data': str) -> pd.Da
         filepath (string): relative path to the folder where the csv file is stored
 
     Returns:
-        A Pandas dataframe of the loaded csv file. If the file doesn't exists, returns False (bool)
+        A Pandas dataframe of the loaded csv file. If the file doesn't exists, returns None
     """
 
-    filepath = filepath + '/' + user
+    filepath = filepath + '/users/' + user
 
     if pathlib.Path(filepath + '/' + filename + '.csv').is_file():
         return load_results(filename=filename, filepath=filepath)
     else:
         print(
             f"WARNING: No personal {filename} data found for {user}")
-        return False
+        return None
