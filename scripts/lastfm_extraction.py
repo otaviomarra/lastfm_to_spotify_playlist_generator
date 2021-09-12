@@ -94,7 +94,7 @@ if __name__ == "__main__":
         datetime.strptime(args['start'], '%Y%m%d').date().timetuple()))
 
     if stored_data is None:
-        # No stored data. No need tou pdate the from date: make requests from the start date argument
+        # No stored data. No need to update the from date: make requests from the start date argument
         pass
     else:
         # If there is stored data, we need to compare the dates and update the from_date, if needed
@@ -108,7 +108,7 @@ if __name__ == "__main__":
             # If from_date is bigger than the maximum stored date, completely overwrite the file and restart from the new selected date
 
             warnings.warn(
-                "Warning: start date bigger than the maximum stored dete. All existing data will be overwritten")
+                "Warning: start date bigger than the maximum stored date. All existing data will be overwritten")
             print(
                 f"Current maximum stored date is {datetime.utcfromtimestamp(max_date).strftime('%Y-%m-%d %H:%M:%S')}")
             print("If you want to cancel, exit the program now!!!")

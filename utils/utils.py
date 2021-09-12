@@ -80,15 +80,18 @@ def load_results(filename: str, filepath: str = './data') -> pd.DataFrame:
         filepath (string): relative path to the folder where the csv file is stored
 
     Returns:
-        A Pandas dataframe of the loaded csv file
+        A Pandas dataframe of the loaded csv file. If the file doesn't exist, returns None
     """
 
     loadpath = filepath + '/' + filename + '.csv'
-    try:
-        return pd.read_csv(loadpath)
-    except Exception as e:
-        print(e)
-        sys.exit()
+    if pathlib.Path(loadpath).is_file():
+        try:
+            return pd.read_csv(loadpath)
+        except Exception as e:
+            print(e)
+            sys.exit()
+    else:
+        return None
 
 
 def load_user_results(filename: str, user: str, filepath: str = './data') -> pd.DataFrame:
