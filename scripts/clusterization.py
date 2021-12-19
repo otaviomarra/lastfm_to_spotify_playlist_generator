@@ -1,12 +1,13 @@
+import os
 import warnings
 
 import argparse
 import numpy as np
 import pandas as pd
+from dotenv import load_dotenv
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import MinMaxScaler
-
-from utils.utils import save_results, load_results
+from utils.utils import *
 
 
 def parse_args():
@@ -19,6 +20,10 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('clusters', type=int,
                         help='Number of clusters to be generated')
+    parser.add_argument('-r', '--random_state', default=1, type=int,
+                        help='Your lucky number (random state for the Kmeans model). Default is 1')
+    parser.add_argument('-a', '--algorithm', default='auto', type=str,
+                        help="Algorithm for the KMeans clusterization. Defaults to 'auto'. \n Options are: 'auto', 'full', 'elkan'. Check the documentation for more info: https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html")
     return vars(parser.parse_args())
 
 
@@ -43,15 +48,16 @@ if __name__ == "__main__":
             inplace=True)
     df.drop_duplicates(inplace=True)
 
-    # Remove features not bo be used
+    # Remove features not bo be used -it can be adjusted by the user
     df.drop(columns=['speechiness', 'liveness', 'danceability'],
             axis=1,
             inplace=True)
 
     # Removing the columns not to be used on the clusterization
-    # Normalized to all feature values between 0 and 1
     X = df.drop(columns=['artist', 'song', 'id', 'duration_ms',
                 'time_signature', 'no_id', 'tempo'], axis=1)
+
+    # Normalize all features to values between 0 and 1
     scaler = MinMaxScaler()
     scaler.fit(X)
     X = scaler.transform(X)
@@ -60,7 +66,8 @@ if __name__ == "__main__":
         n_clusters=args['clusters'],
         init="random",
         max_iter=10000,
-        random_state=4)
+        random_state=args['random_state'],
+        algorithm=args['algorithm'])
     kmeans.fit(X)
 
     df['cluster'] = kmeans.labels_
