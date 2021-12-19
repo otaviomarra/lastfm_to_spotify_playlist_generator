@@ -32,6 +32,7 @@ if __name__ == "__main__":
                           right_on=['song', 'artist'],
                           indicator=True)
         tracks = tracks[tracks['_merge'] == 'left_only']
+        tracks = tracks.drop(columns='_merge', axis=1)
 
     else:
         pass
