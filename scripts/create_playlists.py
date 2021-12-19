@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
         # Delete all songs from the existing playlists
         for i in range(len(playlists_df.values)):
-            spotify.delete_playlist_songs(playlist=playlists_df.values[i],
+            spotify.delete_playlist_songs(playlist=playlists_df.values[i][0],
                                           songs=True)
 
         #playlists = playlists_df.reset_index()['playlist_id'].to_dict()
