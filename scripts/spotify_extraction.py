@@ -2,25 +2,12 @@ import os
 import sys
 import warnings
 
-#import argparse
+# import argparse
 import pandas as pd
 from dotenv import load_dotenv
 
 from utils.utils import *
 from utils.spotify_api import spotify_requests
-
-
-# def parse_args():
-#    """
-#    Parse arguments passed when calling the scripts
-#
-#    Returns a dict with all the arguments
-#    """
-#
-#    parser = argparse.ArgumentParser()
-#    parser.add_argument('user', type=str,
-#                        help='The lastfm userid')
-#    return vars(parser.parse_args())
 
 
 if __name__ == "__main__":
@@ -37,7 +24,15 @@ if __name__ == "__main__":
 
     stored_tracks_ids = load_results(filename='spotify_tracks_ids')
     if stored_tracks_ids is not None:
-        # tracks equals all byt whatever we already have data stored (no need to api call for these cases)
+        # To ensure we are only making api calls for non-stored data
+        tracks = pd.merge(left=tracks,
+                          right=stored_tracks_ids,
+                          how='outer',
+                          left_on=['song', 'artist'],
+                          right_on=['song', 'artist'],
+                          indicator=True)
+        tracks = tracks[tracks['_merge'] == 'left_only']
+
     else:
         pass
 
@@ -46,7 +41,7 @@ if __name__ == "__main__":
                                client_secret=spotify_client_secret)
 
     # Start the api calls and save the spotify song id on a new columns of the dataframe
-    print("Retrieving spotify ids for all songs")
+    print("Retrieving spotify ids for a few songs")
     tracks['sp_id'] = tracks.apply(lambda x: spotify.find_song_id(
         song_name=x['song'], band_name=x['artist']), axis=1)
 
@@ -62,7 +57,6 @@ if __name__ == "__main__":
     found_ratio = round(
         (len(tracks[tracks['sp_id'] != 'not_found'])/len(tracks)*100))
 
-    print(f'Spotify id found for {found_ratio}% of the Lastfm tracks')
     print('\n Getting the song features...')
 
     tracks = tracks[tracks['no_id'] == False]
@@ -70,7 +64,7 @@ if __name__ == "__main__":
     # Create and empty DF to store the results
     song_features = spotify.get_songs_features(ids=tracks['sp_id'])
 
-    #song_features.set_index('id', inplace=True)
+    # song_features.set_index('id', inplace=True)
     stored_song_features = load_results(filename='spotify_songs_features')
 
     if stored_song_features is not None:

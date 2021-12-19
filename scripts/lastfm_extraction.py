@@ -142,7 +142,7 @@ if __name__ == "__main__":
         page = int(response['@attr']['page']) + 1
 
     # Save results on a csv file
-    print('Saving csv results on data/lastfm_played_tracks.csv')
+    print(f'Saving csv results on data/users/{user}/lastfm_played_tracks.csv')
 
     responses_df = pd.DataFrame(data=responses, columns=[
         'artist', 'song', 'unix_timestamp'])

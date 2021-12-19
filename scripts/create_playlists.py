@@ -18,10 +18,6 @@ def parse_args():
     """
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('spotify_client_id', type=str,
-                        help='The spotify app client id')
-    parser.add_argument('spotify_client_secret', type=str,
-                        help='The spotify app client secret')
     parser.add_argument('-r', '--replace_playlists', action='store_true',
                         help='If declared, it will update the previously created playlists instead of creating new ones')
     parser.add_argument('-l', '--lenght', nargs='?', default=150, type=int,
@@ -35,6 +31,7 @@ if __name__ == "__main__":
     load_dotenv()
     spotify_client_secret = os.environ.get("SPOTIFY_CLIENT_SECRET")
     spotify_client_id = os.environ.get("SPOTIFY_CLIENT_ID")
+    user = os.environ.get("LASTFM_USER")
 
     args = parse_args()
 
@@ -51,16 +48,17 @@ if __name__ == "__main__":
 
     if args['replace_playlists'] is True:
         # Recover the file with the created playlists and set a dict with current user's ones
-        playlists_df = load_results(filename='playlists')
-        playlists_df = playlists_df[playlists_df['user_id'] ==
-                                    spotify.user_id]['playlist_id']  # .set_index('user_id')
+        playlists_df = load_user_results(filename='playlists', user=user)
+        # playlists_df = playlists_df[playlists_df['user_id'] ==
+        #                            spotify.user_id]['playlist_id']
 
         # Delete all songs from the existing playlists
         for i in range(len(playlists_df.values)):
             spotify.delete_playlist_songs(playlist=playlists_df.values[i],
                                           songs=True)
 
-        playlists = playlists_df.reset_index()['playlist_id'].to_dict()
+        #playlists = playlists_df.reset_index()['playlist_id'].to_dict()
+        playlists = playlists_df.to_dict()
         # Create new playlists if needed (more clusters than spotify ids already stored)
         if len(playlists_df.index) < clusters:
             new = clusters - len(playlists_df.index)
@@ -85,12 +83,12 @@ if __name__ == "__main__":
 
     # Overwrite previously saved playlist ids from this user
     #   It is not possible to choose which playlists to user or store: all is lost
-    playlists_df = load_results(filename='playlists')
-    playlists_df = playlists_df[playlists_df['user_id'] != spotify.user_id]
+    #playlists_df = load_results(filename='playlists')
+    #playlists_df = playlists_df[playlists_df['user_id'] != spotify.user_id]
 
     tempdf = pd.DataFrame(data=playlists.values(),
                           columns=['playlist_id'])
-    tempdf['user_id'] = spotify.user_id
+    #tempdf['user_id'] = spotify.user_id
 
     playlists_df = playlists_df.append(other=tempdf,
                                        ignore_index=True)

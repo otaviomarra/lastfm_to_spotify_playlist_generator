@@ -24,13 +24,17 @@ def parse_args():
 
 if __name__ == "__main__":
 
+    load_dotenv()
+    user = os.environ.get("LASTFM_USER")
+
     warnings.filterwarnings("ignore")
     args = parse_args()
 
     features = load_results(filename='spotify_songs_features')
-    played = load_results(filename='lastfm_played_tracks')
+    played = load_user_results(filename='lastfm_played_tracks', user=user)
     ids = load_results(filename='spotify_tracks_ids')
 
+    # Dataprep - join the data from multiple sources on a single DF
     df = played.join(features.join(ids.set_index('sp_id'), on='id').set_index(
         ['artist', 'song']), on=['artist', 'song'], how='inner')
     df.drop(columns=['unix_timestamp', 'key', 'mode', 'type',
@@ -38,6 +42,8 @@ if __name__ == "__main__":
             axis=1,
             inplace=True)
     df.drop_duplicates(inplace=True)
+
+    # Remove features not bo be used
     df.drop(columns=['speechiness', 'liveness', 'danceability'],
             axis=1,
             inplace=True)
@@ -60,6 +66,9 @@ if __name__ == "__main__":
     df['cluster'] = kmeans.labels_
     df['cluster'] = df['cluster'].apply(str)
     df.drop(columns=['no_id'], axis=1, inplace=True)
-    save_results(filename='clusterization', df=df)
+
+    save_results(filename='clusterization',
+                 df=df,
+                 filepath=f'./data/users/{user}')
 
     print("Clusterization done!")
