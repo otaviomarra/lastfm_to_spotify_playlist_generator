@@ -7,6 +7,7 @@ from math import ceil
 
 import numpy as np
 import pandas as pd
+import urllib.parse
 import requests as re
 from selenium import webdriver
 
@@ -133,8 +134,12 @@ class spotify_requests(object):
         Returns:
             String with a json with the 50 first results for the band + song name search on spotify
         """
-        r = get_request(url='https://api.spotify.com/v1/search?' + 'q=artist:' + band_name + '%20track:' +
-                        song_name + '&market:from_token' + '&type=track&limit=50&include_external=audio', headers=self.headers)
+        # URL Encode artist names onto a safe string
+        encoded_band_name = urllib.parse.quote_plus(band_name)
+        encoded_song_name = urllib.parse.quote_plus(song_name)
+
+        r = get_request(url='https://api.spotify.com/v1/search?' + 'q=artist:' + encoded_band_name + '%20track:' +
+                        encoded_song_name + '&market:from_token' + '&type=track&limit=50&include_external=audio', headers=self.headers)
         try:
             return r.json()['tracks']['items']
         except:

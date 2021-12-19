@@ -1,5 +1,16 @@
 for utils: EXPORT PYTHONPATH=$PYTHONPATH:$(pwd)
 
+
+lastfm_extraction -ok
+spotify_extraction - ok
+clusterization -
+create playlist -
+
+finish readme
+break down into more functions
+add sanity check script for dq
+change from csvs to another more efficient storage
+
 # Spotify playlist generator from Lastfm
 
 Generate spotify playlists based on your lastfm records! Download your lastfm played tracks, clusterize and generate new playlists on Spotify on demand
