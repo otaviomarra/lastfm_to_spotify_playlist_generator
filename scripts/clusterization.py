@@ -23,7 +23,7 @@ def parse_args():
     parser.add_argument('-r', '--random_state', default=1, type=int,
                         help='Your lucky number (random state for the Kmeans model). Default is 1')
     parser.add_argument('-a', '--algorithm', default='auto', type=str,
-                        help="Algorithm for the KMeans clusterization. Defaults to 'auto'. \n Options are: 'auto', 'full', 'elkan'. Check the documentation for more info: https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html")
+                        help="Algorithm for the KMeans clusterization. Check the documentation for more info: https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html")
     return vars(parser.parse_args())
 
 

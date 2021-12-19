@@ -1,9 +1,9 @@
-for utils: EXPORT PYTHONPATH=$PYTHONPATH:$(pwd)
+for utils: export PYTHONPATH=$PYTHONPATH:$(pwd)
 
 
 lastfm_extraction -ok
 spotify_extraction - ok
-clusterization -
+clusterization - ok
 create playlist -
 
 finish readme
