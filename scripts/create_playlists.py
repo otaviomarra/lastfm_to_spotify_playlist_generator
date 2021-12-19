@@ -1,12 +1,13 @@
 import json
 from math import ceil
+import os
 
 import argparse
 import numpy as np
 import pandas as pd
 from dotenv import load_dotenv
 
-from utils.utils import save_results, load_results
+from utils.utils import *
 from utils.spotify_api import spotify_user_api
 
 
@@ -36,21 +37,18 @@ if __name__ == "__main__":
     args = parse_args()
 
     # Start the spotify user api session and authenticate
-    spotify = spotify_user_api(client_id=args['spotify_client_id'],
-                               client_secret=args['spotify_client_secret'],
+    spotify = spotify_user_api(client_id=spotify_client_id,
+                               client_secret=spotify_client_secret,
                                redirect_uri='https://www.google.com',
                                scope='playlist-modify-public user-read-private')
 
-    df = load_results(filename='clusterization')
+    df = load_user_results(filename='clusterization', user=user)
     df = df[['cluster', 'id']]
 
     clusters = len(df['cluster'].unique())
 
     if args['replace_playlists'] is True:
-        # Recover the file with the created playlists and set a dict with current user's ones
         playlists_df = load_user_results(filename='playlists', user=user)
-        # playlists_df = playlists_df[playlists_df['user_id'] ==
-        #                            spotify.user_id]['playlist_id']
 
         # Delete all songs from the existing playlists
         for i in range(len(playlists_df.values)):
@@ -68,10 +66,16 @@ if __name__ == "__main__":
                 playlist = spotify.create_playlist(
                     name=f'k-means-cluster-{cluster}', description='k-means generated playlist from lastfm data')
                 playlists[cluster] = playlist
+
+            playlists_df = pd.DataFrame(data=playlists.values(),
+                                        columns=['playlist_id'])
+            save_results(filename='playlists', df=playlists_df)
+
         else:
             pass
+
     else:
-        # Create new playlists from scratch and save them on the existing created playlists file.
+        # Create new playlists from scratch
         playlists = {}
         for i in range(clusters):
             cluster = df['cluster'].unique()[i].item()
@@ -81,21 +85,11 @@ if __name__ == "__main__":
             # Generate a dict with the clusters and the playlist id - this will be used to add the songs later
             playlists[cluster] = playlist
 
-    # Overwrite previously saved playlist ids from this user
-    #   It is not possible to choose which playlists to user or store: all is lost
-    #playlists_df = load_results(filename='playlists')
-    #playlists_df = playlists_df[playlists_df['user_id'] != spotify.user_id]
+            playlists_df = pd.DataFrame(data=playlists.values(),
+                                        columns=['playlist_id'])
+            save_results(filename='playlists', df=playlists_df)
 
-    tempdf = pd.DataFrame(data=playlists.values(),
-                          columns=['playlist_id'])
-    #tempdf['user_id'] = spotify.user_id
-
-    playlists_df = playlists_df.append(other=tempdf,
-                                       ignore_index=True)
-
-    save_results(filename='playlists', df=playlists_df)
-
-    # ### Adding songs to the playlists
+    # Adding songs to the playlists
 
     for key in playlists:
         tempdf = df[df['cluster'] == key].sample(args['lenght'])

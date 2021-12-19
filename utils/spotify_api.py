@@ -270,7 +270,7 @@ class spotify_user_api(object):
         Description:
             Opens Firefox on Selenium to authenticate the Spotify user
             For now, it is required for the user to have both Firefox installed and the geckodriver on PATH
-                but in the future I'll think on a better solution for on Docker
+                but in the future I'll think on a better solution
             Returns the authentication code to be used on the second step of the verification (refresh token)
 
         Arguments:
