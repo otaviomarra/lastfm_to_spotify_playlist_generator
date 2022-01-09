@@ -41,6 +41,7 @@ if __name__ == "__main__":
                                client_secret=spotify_client_secret,
                                redirect_uri='https://www.google.com',
                                scope='playlist-modify-public user-read-private')
+    print(spotify)
 
     df = load_user_results(filename='clusterization', user=user)
     df = df[['cluster', 'id']]
@@ -69,7 +70,9 @@ if __name__ == "__main__":
 
             playlists_df = pd.DataFrame(data=playlists.values(),
                                         columns=['playlist_id'])
-            save_results(filename='playlists', df=playlists_df)
+            save_results(filename='playlists',
+                         df=playlists_df,
+                         filepath=f'./data/users/{user}')
 
         else:
             pass
@@ -87,7 +90,9 @@ if __name__ == "__main__":
 
             playlists_df = pd.DataFrame(data=playlists.values(),
                                         columns=['playlist_id'])
-            save_results(filename='playlists', df=playlists_df)
+            save_results(filename='playlists',
+                         df=playlists_df,
+                         filepath=f'./data/users/{user}')
 
     # Adding songs to the playlists
 
