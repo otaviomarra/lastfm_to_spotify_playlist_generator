@@ -10,6 +10,8 @@ from dotenv import load_dotenv
 from utils.utils import *
 from utils.spotify_api import spotify_user_api
 
+from icecream import ic
+
 
 def parse_args():
     """
@@ -58,6 +60,7 @@ if __name__ == "__main__":
 
         #playlists = playlists_df.reset_index()['playlist_id'].to_dict()
         playlists = playlists_df.to_dict()
+        playlists = playlists['playlist_id']
         # Create new playlists if needed (more clusters than spotify ids already stored)
         if len(playlists_df.index) < clusters:
             new = clusters - len(playlists_df.index)
@@ -88,16 +91,17 @@ if __name__ == "__main__":
             # Generate a dict with the clusters and the playlist id - this will be used to add the songs later
             playlists[cluster] = playlist
 
-            playlists_df = pd.DataFrame(data=playlists.values(),
-                                        columns=['playlist_id'])
-            save_results(filename='playlists',
-                         df=playlists_df,
-                         filepath=f'./data/users/{user}')
+        playlists_df = pd.DataFrame(data=playlists.values(),
+                                    columns=['playlist_id'])
+        save_results(filename='playlists',
+                     df=playlists_df,
+                     filepath=f'./data/users/{user}')
 
     # Adding songs to the playlists
-
+    ic(playlists)
     for key in playlists:
-        tempdf = df[df['cluster'] == key].sample(args['lenght'])
+        ic(key)
+        tempdf = df[df['cluster'] == key].sample(n=args['lenght'])
         # Break the ids in chunks respecting the api limitation of batches of 100s
         splits = ceil(len(tempdf)/100)
         chunks = np.array_split(tempdf, splits)
