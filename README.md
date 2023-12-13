@@ -1,15 +1,7 @@
-
-`export PYTHONPATH=$PYTHONPATH:$(pwd)`
-
-review create playlist
-finish readme
-break down into more functions
-add sanity check script for dq
-change from csvs to another more efficient storage
-
 # Spotify playlist generator from Lastfm
 
-Generate spotify playlists based on your lastfm records! Download your lastfm played tracks, clusterize and generate new playlists on Spotify on demand
+Generate spotify playlists based on your lastfm records. 
+Recover your lastfm played tracks, clusterize them into different playlists with k-means and generate new playlists on Spotify on demand
 
 <br>
 
@@ -42,7 +34,7 @@ No need to worry with the Spotify's user authentication - it will be made via br
 
 The project consists of four scripts, each one that can perform a specific step on generating the playlists.
 
-For all extractions and data processing, a series of filers will be stored under the `./data/{user}/` folder, where user is the authenticated Lastfm username. 
+For all extractions and data processing, a series of files will be stored under the `./data` folder. For last_fm records and clusterization the files are stores in a `/{user}` subfolder, with the authenticated Lastfm username. Track id and spotify features data is shared in between all user authentications to save on api execution.
 
 ### lastfm_extraction
 **[LINK](https://github.com/otaviomarra/lastfm_track_analysis/blob/main/scripts/lastfm_extraction.py)**
@@ -73,7 +65,7 @@ Cyndyi Lauper,Girls Just Want To Have Fun,1618853797
 Collect all spotify data from the previously scrobled songs, searching for both Artist and Song name. It returns both the song spotify_id and the song features. If the song id was not found, it will return `not_found` instead of the song id hash
 
 #### Output
-`data/{user}/spotify_tracks_ids.csv` sample:
+`data/spotify_tracks_ids.csv` sample:
 ```
 artist,song,sp_id,no_id
 The Stooges,Tight Pants - Remastered Studio,2K9JdrobtGd4hQcxqiINXS,False
@@ -81,7 +73,7 @@ Neurosis,Fire is the End Lesson,29xUjsv0hjPjnBSw4fUqyi,False
 Om,At Giza,not_found,True
 Mac DeMarco,Still Together,2RLm6OrnjLuoyQEowCJ6QE,False
 ```
-`data/{user}/spotify_songs_features.csv` sample:
+`data/spotify_songs_features.csv` sample:
 ```
 danceability,energy,key,loudness,mode,speechiness,acousticness,instrumentalness,liveness,valence,tempo,type,id,uri,track_href,analysis_url,duration_ms,time_signature
 0.21,0.744,1,-9.898,1,0.0386,0.000174,0.294,0.329,0.0631,130.866,audio_features,29xUjsv0hjPjnBSw4fUqyi,spotify:track:29xUjsv0hjPjnBSw4fUqyi,https://api.spotify.com/v1/tracks/29xUjsv0hjPjnBSw4fUqyi,https://api.spotify.com/v1/audio-analysis/29xUjsv0hjPjnBSw4fUqyi,414413,4
@@ -93,6 +85,8 @@ danceability,energy,key,loudness,mode,speechiness,acousticness,instrumentalness,
 **[LINK](https://github.com/otaviomarra/lastfm_track_analysis/blob/main/scripts/clusterization.py)**
 
 Runs k-means clusterization to classify all songs based on its spotify features. Default setup considers only some of the features but it can be adjusted in the [script](https://github.com/otaviomarra/lastfm_track_analysis/blob/main/scripts/clusterization.py#L52) 
+
+Note the [notebook version](https://github.com/otaviomarra/lastfm_track_analysis/blob/main/kmeans_clusters.ipynb) also exists and can be used as a reference work for feature selection and visualization and determining the number of clusters
 
 #### Arguments
 
@@ -132,31 +126,6 @@ $ python3 create_playlists.py 3 --replace_playlists --lenght=200
 #### Output:
 The playlists will be generated on the authenticated user's Spotify account.
 
-<br>
-
-
-## Configuration
-
-Here you should write what are all of the configurations a user can enter when
-using the project.
-
-#### Argument 1
-Type: `String`  
-Default: `'default value'`
-
-State what an argument does and how you can use it. If needed, you can provide
-an example below.
-
-Example:
-```bash
-awesome-project "Some other value"  # Prints "You're nailing this readme!"
-```
-
-#### Argument 2
-Type: `Number|Boolean`  
-Default: 100
-
-Copy-paste as many of these as you need.
 
 <br>
 
@@ -165,31 +134,3 @@ Copy-paste as many of these as you need.
 * Docker: Further development to allow te browser GUI to be opened (probably with a vnc) is still missing. Therefore, **the current Dockerfile is still not working**
 * Unit tests: still need to be implemented
 * Replace csv files with a more efficient storage solution
-
-<br>
-
-## Contributing
-
-When you publish something open source, one of the greatest motivations is that
-anyone can just jump in and start contributing to your project.
-
-These paragraphs are meant to welcome those kind souls to feel that they are
-needed. You should state something like:
-
-"If you'd like to contribute, please fork the repository and use a feature
-branch. Pull requests are warmly welcome."
-
-If there's anything else the developer needs to know (e.g. the code style
-guide), you should link it here. If there's a lot of things to take into
-consideration, it is common to separate this section to its own file called
-`CONTRIBUTING.md` (or similar). If so, you should say that it exists here.
-
-<br>
-
-## Licensing
-
-One really important part: Give your project a proper license. Here you should
-state what the license is and how to find the text version of the license.
-Something like:
-
-"The code in this project is licensed under MIT license."
